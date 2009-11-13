@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="winquake"
 	ProjectGUID="{5EADA658-0BF6-4CFA-AA00-B45D3B183778}"
+	RootNamespace="winquake"
 	TargetFrameworkVersion="0"
 	>
 	<Platforms>
@@ -5359,6 +5360,50 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\sys_linux.c"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="GL Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="GL Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug No Asm|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="sys_win.c"
 				>
 				<FileConfiguration
@@ -6026,6 +6071,14 @@
 			Name="Resource Files"
 			Filter="ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe"
 			>
+			<File
+				RelativePath="..\..\..\alchemy\avm2-libc\include\AS3.h"
+				>
+			</File>
+			<File
+				RelativePath="..\quakeswf\makeswc"
+				>
+			</File>
 			<File
 				RelativePath="qe3.ico"
 				>

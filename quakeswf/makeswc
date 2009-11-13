@@ -1,0 +1,113 @@
+#Command line to make this .swc:
+#alc-on;	(needed 1st time only)
+#make -j3 -f makeswc;
+
+SRCS= \
+	../WinQuake/nonintel.c \
+	../WinQuake/net_vcr.c \
+	../WinQuake/net_main.c \
+	../WinQuake/net_loop.c \
+	../WinQuake/net_dgrm.c \
+	../WinQuake/model.c \
+	../WinQuake/menu.c \
+	../WinQuake/mathlib.c \
+	../WinQuake/keys.c \
+	../WinQuake/host_cmd.c \
+	../WinQuake/host.c \
+	../WinQuake/draw.c \
+	../WinQuake/d_zpoint.c \
+	../WinQuake/d_vars.c \
+	../WinQuake/d_surf.c \
+	../WinQuake/d_sprite.c \
+	../WinQuake/d_sky.c \
+	../WinQuake/d_scan.c \
+	../WinQuake/d_polyse.c \
+	../WinQuake/d_part.c \
+	../WinQuake/d_modech.c \
+	../WinQuake/d_init.c \
+	../WinQuake/d_fill.c \
+	../WinQuake/d_edge.c \
+	../WinQuake/cvar.c \
+	../WinQuake/crc.c \
+	../WinQuake/console.c \
+	../WinQuake/common.c \
+	../WinQuake/cmd.c \
+	../WinQuake/cl_tent.c \
+	../WinQuake/cl_parse.c \
+	../WinQuake/cl_main.c \
+	../WinQuake/cl_input.c \
+	../WinQuake/cl_demo.c \
+	../WinQuake/chase.c \
+	../WinQuake/zone.c \
+	../WinQuake/world.c \
+	../WinQuake/wad.c \
+	../WinQuake/view.c \
+	../WinQuake/sv_user.c \
+	../WinQuake/sv_phys.c \
+	../WinQuake/sv_move.c \
+	../WinQuake/sv_main.c \
+	../WinQuake/snd_mix.c \
+	../WinQuake/snd_mem.c \
+	../WinQuake/snd_dma.c \
+	../WinQuake/screen.c \
+	../WinQuake/sbar.c \
+	../WinQuake/r_vars.c \
+	../WinQuake/r_surf.c \
+	../WinQuake/r_sprite.c \
+	../WinQuake/r_sky.c \
+	../WinQuake/r_part.c \
+	../WinQuake/r_misc.c \
+	../WinQuake/r_main.c \
+	../WinQuake/r_light.c \
+	../WinQuake/r_efrag.c \
+	../WinQuake/r_edge.c \
+	../WinQuake/r_draw.c \
+	../WinQuake/r_bsp.c \
+	../WinQuake/r_alias.c \
+	../WinQuake/r_aclip.c \
+	../WinQuake/pr_exec.c \
+	../WinQuake/pr_edict.c \
+	../WinQuake/pr_cmds.c \
+	../WinQuake/sys_linux.c
+
+SRCTYPE=c
+CC=gcc
+
+WARN= -Wall
+OUTPUT= quake
+CFLAGS= $(WARN) -DFLASH -DNO_ASM
+
+ifeq ($(DEBUG),1)
+OPTIM= -g
+OBJDIR= Debug
+else
+OPTIM= -O3
+OBJDIR= Release
+endif
+
+
+#The reason we move the swc instead of compiling it directly to the destination lib folder,
+#is that it would prefix the folder names onto the namespace of the CLibInit class.
+OUTPUTFILE= $(OUTPUT).swc
+OUTPUTDIR= lib
+
+all: $(OBJDIR)/$(OUTPUTFILE)
+	@mkdir -p $(OUTPUTDIR)
+	cp $(OBJDIR)/$(OUTPUTFILE) $(OUTPUTDIR)/$(OUTPUTFILE)
+
+#make sure all the bullet directories are on the vpath, so we can make a list of .o files
+VPATH += $(dir $(SRCS))
+OBJS= $(patsubst %.$(SRCTYPE),$(OBJDIR)/%.o,$(notdir $(SRCS)))
+$(OBJDIR)/$(OUTPUTFILE): $(OBJS)
+	@#export ACHACKS_TMPS=1; keeps the generated .as file
+	export ACHACKS_TMPS=0; cd $(OBJDIR); $(CC) $(notdir $(OBJS)) $(OPTIM) -swc -o $(OUTPUTFILE)
+	
+INCLUDES=
+$(OBJDIR)/%.o: %.$(SRCTYPE)
+	@mkdir -p $(OBJDIR)
+	@rm -f $@
+	cd $(OBJDIR); $(CC) $(CFLAGS) $(INCLUDES) $(OPTIM) -c ../$< -o $(notdir $@)
+	
+clean:
+	@rm -f $(OBJS)
+	

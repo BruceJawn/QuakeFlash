@@ -9,7 +9,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/ipc.h>
-#include <sys/shm.h>
 #include <sys/stat.h>
 #include <string.h>
 #include <ctype.h>
@@ -92,6 +91,15 @@ void Sys_Printf (char *fmt, ...)
 	va_start (argptr,fmt);
 	vsprintf (text,fmt,argptr);
 	va_end (argptr);
+
+#ifdef FLASH
+	{
+		//Pass every quake console message to Actionscript's trace() function.
+		AS3_Val as3Str = AS3_String(text);
+		AS3_Trace(as3Str);
+		AS3_Release(as3Str);
+	}
+#endif
 
 	if (strlen(text) > sizeof(text))
 		Sys_Error("memory overwrite in Sys_Printf");
@@ -351,6 +359,27 @@ void Sys_LowFPPrecision (void)
 }
 #endif
 
+#ifdef FLASH
+
+AS3_Val swcInit(void *data, AS3_Val args)
+{
+	//trace("swcInit");
+
+	//Return the ByteArray object representing all of the C++ ram
+	return AS3_Ram();
+}
+
+AS3_Val swcFrame(void *data, AS3_Val args)
+{
+	double currentTime;
+	AS3_ArrayValue(args, "DoubleType", &currentTime);
+
+	return NULL;
+}
+
+#endif
+
+
 int main (int c, char **v)
 {
 
@@ -399,6 +428,30 @@ int main (int c, char **v)
 		printf ("Linux Quake -- Version %0.3f\n", LINUX_VERSION);
 	}
 
+#ifdef FLASH
+	{
+		int i;
+
+		AS3_Val swcEntries[] = 
+		{
+			AS3_Function(NULL, swcInit),
+			AS3_Function(NULL, swcFrame)
+		};
+
+		// construct an object that holds refereces to the functions
+		AS3_Val result = AS3_Object(
+			"swcInit:AS3ValType,swcFrame:AS3ValType",
+			swcEntries[0], 
+			swcEntries[1]);
+
+		for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
+			AS3_Release(swcEntries[i]);
+		
+		// notify that we initialized -- THIS DOES NOT RETURN!
+		AS3_LibInit(result);
+	}
+#else
+
     oldtime = Sys_FloatTime () - 0.1;
     while (1)
     {
@@ -427,6 +480,8 @@ int main (int c, char **v)
         if (sys_linerefresh.value)
             Sys_LineRefresh ();
     }
+
+#endif //ifndef FLASH
 
 }
 
