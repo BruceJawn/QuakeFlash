@@ -91,7 +91,6 @@ int CL_GetMessage (void)
 {
 	int		r, i;
 	float	f;
-	
 	if	(cls.demoplayback)
 	{
 	// decide if it is time to grab the next message		
@@ -114,27 +113,40 @@ int CL_GetMessage (void)
 		}
 		
 	// get the next message
+#ifdef FLASH
+		Q_memcpy(&net_message.cursize, cls.demofile, 4);
+		((byte*)cls.demofile) += 4;
+#else
 		fread (&net_message.cursize, 4, 1, cls.demofile);
+#endif
 		VectorCopy (cl.mviewangles[0], cl.mviewangles[1]);
 		for (i=0 ; i<3 ; i++)
 		{
+#ifdef FLASH
+			Q_memcpy(&f, cls.demofile, 4);
+			((byte*)cls.demofile) += 4;
+#else
 			r = fread (&f, 4, 1, cls.demofile);
+#endif
 			cl.mviewangles[0][i] = LittleFloat (f);
 		}
-		
 		net_message.cursize = LittleLong (net_message.cursize);
 		if (net_message.cursize > MAX_MSGLEN)
 			Sys_Error ("Demo message > MAX_MSGLEN");
+#ifdef FLASH
+		Q_memcpy(net_message.data, cls.demofile, net_message.cursize);
+		((byte*)cls.demofile) += net_message.cursize;
+		r = 1;
+#else
 		r = fread (net_message.data, net_message.cursize, 1, cls.demofile);
+#endif
 		if (r != 1)
 		{
 			CL_StopPlayback ();
 			return 0;
 		}
-	
 		return 1;
 	}
-
 	while (1)
 	{
 		r = NET_GetMessage (cls.netcon);
@@ -151,7 +163,6 @@ int CL_GetMessage (void)
 
 	if (cls.demorecording)
 		CL_WriteDemoMessage ();
-	
 	return r;
 }
 
@@ -304,7 +315,13 @@ void CL_PlayDemo_f (void)
 	cls.state = ca_connected;
 	cls.forcetrack = 0;
 
-	while ((c = getc(cls.demofile)) != '\n')
+	while ((c = 
+#ifdef FLASH
+		*((char*)cls.demofile)++
+#else
+		getc(cls.demofile)
+#endif
+		) != '\n')
 		if (c == '-')
 			neg = true;
 		else

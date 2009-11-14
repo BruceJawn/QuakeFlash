@@ -109,8 +109,7 @@ Draw_Init
 */
 void Draw_Init (void)
 {
-	int		i;
-
+	//int		i;
 	draw_chars = W_GetLumpName ("conchars");
 	draw_disc = W_GetLumpName ("disc");
 	draw_backtile = W_GetLumpName ("backtile");
@@ -881,6 +880,8 @@ Call before beginning any disc IO.
 */
 void Draw_BeginDisc (void)
 {
+	if(!draw_disc)
+		return;	//On Windows you can get away without checking for null, because D_BeginDirectRect checks vid_initialized. But not for FLASH
 
 	D_BeginDirectRect (vid.width - 24, 0, draw_disc->data, 24, 24);
 }

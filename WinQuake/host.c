@@ -245,8 +245,8 @@ Writes key bindings and archived cvars to config.cfg
 */
 void Host_WriteConfiguration (void)
 {
+#ifndef FLASH	//MKR: FIXME
 	FILE	*f;
-
 // dedicated servers initialize the host but don't parse and set the
 // config.cfg cvars
 	if (host_initialized & !isDedicated)
@@ -263,6 +263,7 @@ void Host_WriteConfiguration (void)
 
 		fclose (f);
 	}
+#endif
 }
 
 

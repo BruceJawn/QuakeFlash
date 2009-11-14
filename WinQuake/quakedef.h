@@ -47,6 +47,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef FLASH
 #include "AS3.h"
+
+void trace(char *fmt, ...);
+
+#else
+#define trace(a, ...)
 #endif
 
 #if defined(_WIN32) && !defined(WINDED)

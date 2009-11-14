@@ -46,9 +46,6 @@ SRCS= \
 	../WinQuake/sv_phys.c \
 	../WinQuake/sv_move.c \
 	../WinQuake/sv_main.c \
-	../WinQuake/snd_mix.c \
-	../WinQuake/snd_mem.c \
-	../WinQuake/snd_dma.c \
 	../WinQuake/screen.c \
 	../WinQuake/sbar.c \
 	../WinQuake/r_vars.c \
@@ -68,12 +65,16 @@ SRCS= \
 	../WinQuake/pr_exec.c \
 	../WinQuake/pr_edict.c \
 	../WinQuake/pr_cmds.c \
-	../WinQuake/sys_linux.c
+	../WinQuake/sys_linux.c \
+	../WinQuake/vid_null.c \
+	../WinQuake/cd_null.c \
+	../WinQuake/in_null.c \
+	../WinQuake/snd_null.c
 
 SRCTYPE=c
 CC=gcc
 
-WARN= -Wall
+WARN= -Wall -Werror-implicit-function-declaration
 OUTPUT= quake
 CFLAGS= $(WARN) -DFLASH -DNO_ASM
 

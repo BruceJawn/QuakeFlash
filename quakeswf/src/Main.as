@@ -4,6 +4,10 @@
 	import flash.events.Event;
 	import flash.utils.ByteArray;
 	import cmodule.quake.CLibInit;
+	import flash.utils.getTimer;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import flash.geom.Rectangle;
 	
 	/**
 	 * ...
@@ -14,6 +18,13 @@
 		
 		private var _swc:Object;
 		private var _swcRam:ByteArray;
+		
+		private var _bitmapData:BitmapData;//This is null until after we have called the first _swc.swcFrame()
+		private var _bitmap:Bitmap;
+		private var _rect:Rectangle;
+		
+		[Embed(source="../embed/PAK0.PAK", mimeType="application/octet-stream")]
+		private var Embed_pak:Class;
 		
 		public function Main():void 
 		{
@@ -29,7 +40,32 @@
 			//init swc
 			var loader:CLibInit = new CLibInit;
 			_swc = loader.init();
-			_swcRam = _swc.swcInit();
+			
+			var pakFile:ByteArray = new Embed_pak;
+			var begintime:Number = getTimer() / 1000;
+			_swcRam = _swc.swcInit(pakFile, begintime);				
+			
+			addEventListener(Event.ENTER_FRAME, onFrame);
+		}
+		
+		private function onFrame(e:Event):void
+		{
+			var newTime:Number = getTimer() / 1000;
+			var screenBufferPos:uint = _swc.swcFrame(newTime);
+										
+			if (!_bitmapData)
+			{
+				//Wait for the first frame before adding the bitmap.
+				var width:uint = 640;
+				var height:uint = 480;
+				_bitmapData = new BitmapData(width, height, false);
+				_rect = new Rectangle(0, 0, width, height);
+				_bitmap = new Bitmap(_bitmapData);
+				addChild(_bitmap);
+			}
+			
+			_swcRam.position = screenBufferPos;
+			_bitmapData.setPixels(_rect, _swcRam);
 		}
 		
 	}

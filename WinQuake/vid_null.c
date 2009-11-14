@@ -18,28 +18,54 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 */
 // vid_null.c -- null video driver to aid porting efforts
+//This has been customized for FLASH
 
 #include "quakedef.h"
 #include "d_local.h"
 
 viddef_t	vid;				// global video state
 
-#define	BASEWIDTH	320
-#define	BASEHEIGHT	200
+#define	BASEWIDTH	640
+#define	BASEHEIGHT	480
 
 byte	vid_buffer[BASEWIDTH*BASEHEIGHT];
 short	zbuffer[BASEWIDTH*BASEHEIGHT];
 byte	surfcache[256*1024];
 
+unsigned _vidBuffer4b[BASEWIDTH*BASEHEIGHT];//This is created from the palette every frame, and is suitable for FLASH BitmapData
+
 unsigned short	d_8to16table[256];
 unsigned	d_8to24table[256];
 
-void	VID_SetPalette (unsigned char *palette)
+void	VID_SetPalette (unsigned char *pal)
 {
+	int i;
+	unsigned r,g,b;
+	unsigned v;
+	unsigned	*table;	
+
+//
+// 8 8 8 encoding
+//
+	table = d_8to24table;
+	for (i=0 ; i<256 ; i++)
+	{
+		r = pal[0];
+		g = pal[1];
+		b = pal[2];
+		pal += 3;
+		
+		v = (255<<24) + (r<<16) + (g<<8) + (b<<0);
+//		v = (255<<0) + (r<<8) + (g<<16) + (b<<24);
+//		v = (255<<24) + (r<<0) + (g<<8) + (b<<16);
+		*table++ = v;
+	}
+	d_8to24table[255] &= 0xffffff;	// 255 is transparent
 }
 
 void	VID_ShiftPalette (unsigned char *palette)
 {
+	VID_SetPalette(palette);
 }
 
 void	VID_Init (unsigned char *palette)
@@ -63,6 +89,13 @@ void	VID_Shutdown (void)
 
 void	VID_Update (vrect_t *rects)
 {
+	int i;
+	//Create the buffer suitable for AS3 using the palette
+
+	for(i = 0; i < sizeof(_vidBuffer4b)/sizeof(_vidBuffer4b[0]); i++)
+	{
+		_vidBuffer4b[i] = d_8to24table[vid_buffer[i]];
+	}
 }
 
 /*

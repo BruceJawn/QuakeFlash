@@ -92,15 +92,6 @@ void Sys_Printf (char *fmt, ...)
 	vsprintf (text,fmt,argptr);
 	va_end (argptr);
 
-#ifdef FLASH
-	{
-		//Pass every quake console message to Actionscript's trace() function.
-		AS3_Val as3Str = AS3_String(text);
-		AS3_Trace(as3Str);
-		AS3_Release(as3Str);
-	}
-#endif
-
 	if (strlen(text) > sizeof(text))
 		Sys_Error("memory overwrite in Sys_Printf");
 
@@ -240,12 +231,21 @@ void Sys_FileClose (int handle)
 
 void Sys_FileSeek (int handle, int position)
 {
+#ifdef FLASH
+	Sys_Error("Sys_FileSeek should not be called on FLASH"); 
+#else
 	lseek (handle, position, SEEK_SET);
+#endif
 }
 
 int Sys_FileRead (int handle, void *dest, int count)
 {
+#ifdef FLASH
+	Q_memcpy(dest, (void*)handle, count);
+	return count;
+#else
     return read (handle, dest, count);
+#endif
 }
 
 void Sys_DebugLog(char *file, char *fmt, ...)
@@ -286,8 +286,13 @@ void Sys_EditFile(char *filename)
 
 }
 
+double _as3Time;
+
 double Sys_FloatTime (void)
 {
+#ifdef FLASH
+	return _as3Time;
+#else
     struct timeval tp;
     struct timezone tzp; 
     static int      secbase; 
@@ -301,6 +306,7 @@ double Sys_FloatTime (void)
     }
 
     return (tp.tv_sec - secbase) + tp.tv_usec/1000000.0;
+#endif
 }
 
 // =======================================================================
@@ -361,33 +367,118 @@ void Sys_LowFPPrecision (void)
 
 #ifdef FLASH
 
+void trace(char *fmt, ...)
+{
+	va_list		argptr;
+	char		msg[10000] = "TRACE: ";
+	AS3_Val as3Str;
+	
+	va_start (argptr,fmt);
+	vsprintf (&msg[7],fmt,argptr);
+	va_end (argptr);
+
+	//OutputDebugString(str);
+	//OutputDebugString("\n");
+
+	as3Str = AS3_String(msg);
+	AS3_Trace(as3Str);
+	AS3_Release(as3Str);
+}
+
+int swcQuakeInit (int c, char **v);
+
+//Since we cannot load files, PAK0.PAK has been embedded in the swf file, and we receive a ByteArray object
+//with which to load our pak file
+AS3_Val _pakByteArray;
+double oldtime;
+
 AS3_Val swcInit(void *data, AS3_Val args)
 {
-	//trace("swcInit");
+	int argc;
+	char *argv;
 
-	//Return the ByteArray object representing all of the C++ ram
+	//Save the byte array, which will be read in COM_InitFilesystem
+	AS3_ArrayValue(args, "AS3ValType", &_pakByteArray, &oldtime);
+	
+	//Launch the quake init routines all the way until before the main loop
+	argc = 1;
+	argv = "";
+	swcQuakeInit(argc, &argv);
+
+	//Return the ByteArray object representing all of the C++ ram - used to render the bitmap
 	return AS3_Ram();
 }
 
 AS3_Val swcFrame(void *data, AS3_Val args)
 {
-	double currentTime;
-	AS3_ArrayValue(args, "DoubleType", &currentTime);
+	AS3_ArrayValue(args, "DoubleType", &_as3Time);	//This will allow Sys_FloatTime() to work
 
-	return NULL;
+	{//Copied from the loop from the linux main function
+
+		double		time, newtime;
+
+// find time spent rendering last frame
+        newtime = Sys_FloatTime ();
+        time = newtime - oldtime;
+
+        if (time > sys_ticrate.value*2)
+            oldtime = newtime;
+        else
+            oldtime += time;
+
+        Host_Frame (time);
+
+// graphic debugging aids
+        if (sys_linerefresh.value)
+            Sys_LineRefresh ();
+    }
+
+	//Return the position of the screen buffer in the Alchemy ByteArray of memory 
+	extern unsigned _vidBuffer4b[];
+	return AS3_Ptr(_vidBuffer4b);
 }
-
-#endif
-
 
 int main (int c, char **v)
 {
+	int i;
 
-	double		time, oldtime, newtime;
+	AS3_Val swcEntries[] = 
+	{
+		AS3_Function(NULL, swcInit),
+		AS3_Function(NULL, swcFrame)
+	};
+
+	// construct an object that holds refereces to the functions
+	AS3_Val result = AS3_Object(
+		"swcInit:AS3ValType,swcFrame:AS3ValType",
+		swcEntries[0], 
+		swcEntries[1]);
+
+	for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
+		AS3_Release(swcEntries[i]);
+	
+	// notify that we initialized -- THIS DOES NOT RETURN!
+	AS3_LibInit(result);
+}
+
+void Sys_SendKeyEvents (void)
+{
+}
+
+int swcQuakeInit (int c, char **v)
+#else
+int main (int c, char **v)
+#endif
+{
+
 	quakeparms_t parms;
+	int j;
+#ifndef FLASH
+	double		time, oldtime, newtime;
 	extern int vcrFile;
 	extern int recording;
-	int j;
+#endif
+	
 
 //	static char cwd[1024];
 
@@ -428,30 +519,8 @@ int main (int c, char **v)
 		printf ("Linux Quake -- Version %0.3f\n", LINUX_VERSION);
 	}
 
-#ifdef FLASH
-	{
-		int i;
 
-		AS3_Val swcEntries[] = 
-		{
-			AS3_Function(NULL, swcInit),
-			AS3_Function(NULL, swcFrame)
-		};
-
-		// construct an object that holds refereces to the functions
-		AS3_Val result = AS3_Object(
-			"swcInit:AS3ValType,swcFrame:AS3ValType",
-			swcEntries[0], 
-			swcEntries[1]);
-
-		for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
-			AS3_Release(swcEntries[i]);
-		
-		// notify that we initialized -- THIS DOES NOT RETURN!
-		AS3_LibInit(result);
-	}
-#else
-
+#ifndef FLASH
     oldtime = Sys_FloatTime () - 0.1;
     while (1)
     {
@@ -483,8 +552,8 @@ int main (int c, char **v)
 
 #endif //ifndef FLASH
 
+	return 0;
 }
-
 
 /*
 ================

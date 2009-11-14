@@ -274,7 +274,15 @@ void Con_Print (char *txt)
 	int		c, l;
 	static int	cr;
 	int		mask;
-	
+
+#ifdef FLASH
+	{
+		AS3_Val as3Str = AS3_String(txt);
+		AS3_Trace(as3Str);
+		AS3_Release(as3Str);
+	}
+#endif
+
 	con_backscroll = 0;
 
 	if (txt[0] == 1)

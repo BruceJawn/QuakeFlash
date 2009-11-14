@@ -3017,8 +3017,8 @@ LONG WINAPI MainWndProc (
 		// crash on Win95)
 			if (!in_mode_set)
 			{
-				if (MessageBox (mainwindow, "Are you sure you want to quit?", "Confirm Exit",
-							MB_YESNO | MB_SETFOREGROUND | MB_ICONQUESTION) == IDYES)
+				//if (MessageBox (mainwindow, "Are you sure you want to quit?", "Confirm Exit",
+				//			MB_YESNO | MB_SETFOREGROUND | MB_ICONQUESTION) == IDYES)
 				{
 					Sys_Quit ();
 				}

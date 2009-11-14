@@ -754,7 +754,7 @@ void SZ_Clear (sizebuf_t *buf)
 void *SZ_GetSpace (sizebuf_t *buf, int length)
 {
 	void    *data;
-	
+
 	if (buf->cursize + length > buf->maxsize)
 	{
 		if (!buf->allowoverflow)
@@ -1214,7 +1214,11 @@ typedef struct
 typedef struct pack_s
 {
 	char    filename[MAX_OSPATH];
+#ifdef FLASH
+	byte			*data;
+#else
 	int             handle;
+#endif
 	int             numfiles;
 	packfile_t      *files;
 } pack_t;
@@ -1397,6 +1401,12 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 				if (!strcmp (pak->files[i].name, filename))
 				{       // found it!
 					Sys_Printf ("PackFile: %s : %s\n",pak->filename, filename);
+#ifdef FLASH
+					if (handle)
+						*handle = (int)(pak->data + pak->files[i].filepos);
+					else
+						*file = (FILE*)(pak->data + pak->files[i].filepos);
+#else
 					if (handle)
 					{
 						*handle = pak->handle;
@@ -1408,6 +1418,7 @@ int COM_FindFile (char *filename, int *handle, FILE **file)
 						if (*file)
 							fseek (*file, pak->files[i].filepos, SEEK_SET);
 					}
+#endif
 					com_filesize = pak->files[i].filelen;
 					return com_filesize;
 				}
@@ -1509,6 +1520,7 @@ If it is a pak file handle, don't really close it
 */
 void COM_CloseFile (int h)
 {
+#ifndef FLASH	//For FLASH, file handles are really pointers
 	searchpath_t    *s;
 	
 	for (s = com_searchpaths ; s ; s=s->next)
@@ -1516,6 +1528,7 @@ void COM_CloseFile (int h)
 			return;
 			
 	Sys_FileClose (h);
+#endif
 }
 
 
@@ -1543,10 +1556,8 @@ byte *COM_LoadFile (char *path, int usehunk)
 	len = COM_OpenFile (path, &h);
 	if (h == -1)
 		return NULL;
-	
 // extract the filename base name for hunk tag
 	COM_FileBase (path, base);
-	
 	if (usehunk == 1)
 		buf = Hunk_AllocName (len+1, base);
 	else if (usehunk == 2)
@@ -1564,14 +1575,12 @@ byte *COM_LoadFile (char *path, int usehunk)
 	}
 	else
 		Sys_Error ("COM_LoadFile: bad usehunk");
-
 	if (!buf)
 		Sys_Error ("COM_LoadFile: not enough space for %s", path);
 		
 	((byte *)buf)[len] = 0;
-
 	Draw_BeginDisc ();
-	Sys_FileRead (h, buf, len);                     
+	Sys_FileRead (h, buf, len);
 	COM_CloseFile (h);
 	Draw_EndDisc ();
 
@@ -1616,23 +1625,32 @@ Loads the header and directory, adding the files at the beginning
 of the list so they override previous pack files.
 =================
 */
-pack_t *COM_LoadPackFile (char *packfile)
+pack_t *COM_LoadPackFile (
+						  char *packfile //For FLASH, this is the pointer to the data, NOT the filename
+						  )
 {
-	dpackheader_t   header;
-	int                             i;
+	dpackheader_t			header;
+	int                     i;
 	packfile_t              *newfiles;
-	int                             numpackfiles;
+	int                     numpackfiles;
 	pack_t                  *pack;
-	int                             packhandle;
 	dpackfile_t             info[MAX_FILES_IN_PACK];
 	unsigned short          crc;
 
+#ifdef FLASH
+	byte* pakBytes = (byte*)packfile;
+	byte* pakOffset = pakBytes;
+	packfile = "Embedded-Pak";
+	Q_memcpy(&header, pakOffset, sizeof(header));
+#else
+	int                     packhandle;
 	if (Sys_FileOpenRead (packfile, &packhandle) == -1)
 	{
 //              Con_Printf ("Couldn't open %s\n", packfile);
 		return NULL;
 	}
 	Sys_FileRead (packhandle, (void *)&header, sizeof(header));
+#endif
 	if (header.id[0] != 'P' || header.id[1] != 'A'
 	|| header.id[2] != 'C' || header.id[3] != 'K')
 		Sys_Error ("%s is not a packfile", packfile);
@@ -1649,8 +1667,13 @@ pack_t *COM_LoadPackFile (char *packfile)
 
 	newfiles = Hunk_AllocName (numpackfiles * sizeof(packfile_t), "packfile");
 
+#ifdef FLASH
+	pakOffset += header.dirofs;
+	Q_memcpy(info, pakOffset, header.dirlen);
+#else
 	Sys_FileSeek (packhandle, header.dirofs);
 	Sys_FileRead (packhandle, (void *)info, header.dirlen);
+#endif
 
 // crc the directory to check for modifications
 	CRC_Init (&crc);
@@ -1669,14 +1692,46 @@ pack_t *COM_LoadPackFile (char *packfile)
 
 	pack = Hunk_Alloc (sizeof (pack_t));
 	strcpy (pack->filename, packfile);
+#ifdef FLASH
+	pack->data = pakBytes;
+#else
 	pack->handle = packhandle;
+#endif
 	pack->numfiles = numpackfiles;
 	pack->files = newfiles;
 	
 	Con_Printf ("Added packfile %s (%i files)\n", packfile, numpackfiles);
+
 	return pack;
 }
 
+#ifdef FLASH
+
+extern AS3_Val _pakByteArray;
+
+void COM_AddPakByteArray ()
+{
+	pack_t *pak;
+	searchpath_t *search;
+	char *pakBytes;
+	int numBytes;
+
+	numBytes = 18689235;	//MKR: FIXME: determine the size automatically
+	//pakBytes = Hunk_Alloc(numBytes);
+	pakBytes = malloc(numBytes);
+	AS3_ByteArray_readBytes(pakBytes, _pakByteArray, numBytes);
+	
+	//Copied from COM_AddGameDirectory
+	pak = COM_LoadPackFile (pakBytes);
+	if (!pak)
+		Sys_Error("Could not load embedded pakfile.");
+
+	search = Hunk_Alloc (sizeof(searchpath_t));
+	search->pack = pak;
+	search->next = com_searchpaths;
+	com_searchpaths = search;
+}
+#else
 
 /*
 ================
@@ -1694,6 +1749,7 @@ void COM_AddGameDirectory (char *dir)
 	char                    pakfile[MAX_OSPATH];
 
 	strcpy (com_gamedir, dir);
+
 
 //
 // add the directory to the search path
@@ -1723,6 +1779,8 @@ void COM_AddGameDirectory (char *dir)
 //
 
 }
+
+#endif
 
 /*
 ================
@@ -1771,6 +1829,10 @@ void COM_InitFilesystem (void)
 	else
 		com_cachedir[0] = 0;
 
+
+#ifdef FLASH
+	COM_AddPakByteArray();
+#else
 //
 // start up with GAMENAME by default (id1)
 //
@@ -1791,6 +1853,7 @@ void COM_InitFilesystem (void)
 		com_modified = true;
 		COM_AddGameDirectory (va("%s/%s", basedir, com_argv[i+1]));
 	}
+#endif
 
 //
 // -path <dir or packfile> [<dir or packfile>] ...
