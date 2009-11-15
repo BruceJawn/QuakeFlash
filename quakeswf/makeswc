@@ -69,7 +69,8 @@ SRCS= \
 	../WinQuake/vid_null.c \
 	../WinQuake/cd_null.c \
 	../WinQuake/in_null.c \
-	../WinQuake/snd_null.c
+	../WinQuake/snd_null.c \
+	../WinQuake/net_none.c
 
 SRCTYPE=c
 CC=gcc

@@ -2,12 +2,14 @@
 {
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.KeyboardEvent;
 	import flash.utils.ByteArray;
 	import cmodule.quake.CLibInit;
 	import flash.utils.getTimer;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
+	
 	
 	/**
 	 * ...
@@ -46,6 +48,8 @@
 			_swcRam = _swc.swcInit(pakFile, begintime);				
 			
 			addEventListener(Event.ENTER_FRAME, onFrame);
+			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 		}
 		
 		private function onFrame(e:Event):void
@@ -66,6 +70,16 @@
 			
 			_swcRam.position = screenBufferPos;
 			_bitmapData.setPixels(_rect, _swcRam);
+		}
+		
+		private function onKeyDown( e:KeyboardEvent ):void
+		{
+			//trace("onKeyDown: ", e.keyCode);
+			_swc.swcKey(e.keyCode, 1);
+		}
+		private function onKeyUp( e:KeyboardEvent ):void
+		{
+			_swc.swcKey(e.keyCode, 0);
 		}
 		
 	}

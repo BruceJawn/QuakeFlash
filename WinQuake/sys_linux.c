@@ -116,6 +116,7 @@ static char end2[] =
 #endif
 void Sys_Quit (void)
 {
+#ifndef FLASH	//Cant quit on FLASH
 	Host_Shutdown();
     fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
 #if 0
@@ -126,6 +127,7 @@ void Sys_Quit (void)
 #endif
 	fflush(stdout);
 	exit(0);
+#endif
 }
 
 void Sys_Init(void)
@@ -438,6 +440,18 @@ AS3_Val swcFrame(void *data, AS3_Val args)
 	return AS3_Ptr(_vidBuffer4b);
 }
 
+AS3_Val swcKey(void *data, AS3_Val args)
+{
+	int key, state;
+
+	AS3_ArrayValue(args, "IntType,IntType", &key, &state);
+
+	extern byte _asToQKey[256];
+	Key_Event(_asToQKey[key], state);
+
+	return NULL;
+}
+
 int main (int c, char **v)
 {
 	int i;
@@ -445,14 +459,16 @@ int main (int c, char **v)
 	AS3_Val swcEntries[] = 
 	{
 		AS3_Function(NULL, swcInit),
-		AS3_Function(NULL, swcFrame)
+		AS3_Function(NULL, swcFrame),
+		AS3_Function(NULL, swcKey),
 	};
 
 	// construct an object that holds refereces to the functions
 	AS3_Val result = AS3_Object(
-		"swcInit:AS3ValType,swcFrame:AS3ValType",
+		"swcInit:AS3ValType,swcFrame:AS3ValType,swcKey:AS3ValType",
 		swcEntries[0], 
-		swcEntries[1]);
+		swcEntries[1],
+		swcEntries[2]);
 
 	for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
 		AS3_Release(swcEntries[i]);
