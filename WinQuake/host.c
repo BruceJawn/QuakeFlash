@@ -245,12 +245,20 @@ Writes key bindings and archived cvars to config.cfg
 */
 void Host_WriteConfiguration (void)
 {
-#ifndef FLASH	//MKR: FIXME
-	FILE	*f;
 // dedicated servers initialize the host but don't parse and set the
 // config.cfg cvars
 	if (host_initialized & !isDedicated)
 	{
+#ifdef FLASH
+		char configBuffer[10000];
+		char *s = configBuffer;
+		
+		Key_WriteBindings (&s);
+		Cvar_WriteVariables (&s);
+
+		swcSetSharedObject("config.cfg", configBuffer);
+#else
+		FILE	*f;
 		f = fopen (va("%s/config.cfg",com_gamedir), "w");
 		if (!f)
 		{
@@ -262,8 +270,9 @@ void Host_WriteConfiguration (void)
 		Cvar_WriteVariables (f);
 
 		fclose (f);
-	}
 #endif
+	}
+
 }
 
 
@@ -447,7 +456,7 @@ void Host_ShutdownServer(qboolean crash)
 	while (count);
 
 // make sure all the clients know we're disconnecting
-	buf.data = message;
+	buf.data = (byte*)message;
 	buf.maxsize = 4;
 	buf.cursize = 0;
 	MSG_WriteByte(&buf, svc_disconnect);

@@ -9,6 +9,7 @@
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
+	import flash.net.SharedObject;
 	
 	
 	/**
@@ -45,9 +46,9 @@
 			
 			var pakFile:ByteArray = new Embed_pak;
 			var begintime:Number = getTimer() / 1000;
-			_swcRam = _swc.swcInit(pakFile, begintime);				
+			_swcRam = _swc.swcInit(this, pakFile);
 			
-			addEventListener(Event.ENTER_FRAME, onFrame);
+			stage.addEventListener(Event.ENTER_FRAME, onFrame);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
 		}
@@ -82,6 +83,28 @@
 			_swc.swcKey(e.keyCode, 0);
 		}
 		
+		//SharedObjects are used to save quake config files	
+		public function setSharedObject(name:String, value:String):void
+		{
+			var sharedObject:SharedObject = SharedObject.getLocal(name);
+			
+			if (!sharedObject)
+				return;
+				
+			sharedObject.data.str = value;
+			sharedObject.flush();
+		}
+		public function getSharedObject(name:String):String
+		{
+			var sharedObject:SharedObject = SharedObject.getLocal(name);
+			if (!sharedObject)
+				return null;
+			
+			if (!sharedObject.data.str)
+				return null;
+			
+			return sharedObject.data.str;
+		}
 	}
 	
 }

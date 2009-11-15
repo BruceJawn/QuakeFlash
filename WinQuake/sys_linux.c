@@ -369,6 +369,10 @@ void Sys_LowFPPrecision (void)
 
 #ifdef FLASH
 
+AS3_Val _swfMain;
+AS3_Val _pakByteArray;//Since we cannot load files, PAK0.PAK has been embedded in the swf file, and we receive a ByteArray objectwith which to load our pak file
+double _oldtime;
+
 void trace(char *fmt, ...)
 {
 	va_list		argptr;
@@ -387,12 +391,46 @@ void trace(char *fmt, ...)
 	AS3_Release(as3Str);
 }
 
-int swcQuakeInit (int c, char **v);
+void swcSetSharedObject(const char* name, const char* value)
+{
+	AS3_Val params = AS3_Array(
+		"AS3ValType,AS3ValType",
+		AS3_String(name), AS3_String(value));
 
-//Since we cannot load files, PAK0.PAK has been embedded in the swf file, and we receive a ByteArray object
-//with which to load our pak file
-AS3_Val _pakByteArray;
-double oldtime;
+	AS3_CallS("setSharedObject", _swfMain, params);
+
+	AS3_Release(params);
+}
+
+char* swcGetSharedObject(const char* name)
+{
+	//Shared objects are used to store config files, which are loaded into hunk memory.
+	//Therefore we use hunk memory too, as it will be automatically freed.
+
+	AS3_Val params = AS3_Array("AS3ValType", AS3_String(name));
+
+	AS3_Val soStr = AS3_CallS("getSharedObject", _swfMain, params);
+
+	char* ret;
+
+	AS3_Malloced_Str mallocedStr = AS3_StringValue(soStr);
+	if(!Q_strcmp(mallocedStr, "null"))
+	{
+		ret = NULL;
+	}
+	else
+	{
+		ret = Hunk_Alloc(strlen(mallocedStr)+1);
+		strcpy(ret, mallocedStr);
+	}
+
+	free(mallocedStr);
+	AS3_Release(soStr);
+	AS3_Release(params);
+	return ret;
+}
+
+int swcQuakeInit (int c, char **v);
 
 AS3_Val swcInit(void *data, AS3_Val args)
 {
@@ -400,7 +438,7 @@ AS3_Val swcInit(void *data, AS3_Val args)
 	char *argv;
 
 	//Save the byte array, which will be read in COM_InitFilesystem
-	AS3_ArrayValue(args, "AS3ValType", &_pakByteArray, &oldtime);
+	AS3_ArrayValue(args, "AS3ValType,AS3ValType", &_swfMain, &_pakByteArray);
 	
 	//Launch the quake init routines all the way until before the main loop
 	argc = 1;
@@ -421,12 +459,12 @@ AS3_Val swcFrame(void *data, AS3_Val args)
 
 // find time spent rendering last frame
         newtime = Sys_FloatTime ();
-        time = newtime - oldtime;
+        time = newtime - _oldtime;
 
         if (time > sys_ticrate.value*2)
-            oldtime = newtime;
+            _oldtime = newtime;
         else
-            oldtime += time;
+            _oldtime += time;
 
         Host_Frame (time);
 

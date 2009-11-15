@@ -303,12 +303,20 @@ void M_Main_Draw (void)
 	M_DrawTransPic (54, 32 + m_main_cursor * 20,Draw_CachePic( va("gfx/menudot%i.lmp", f+1 ) ) );
 }
 
+void Host_WriteConfiguration (void);
 
 void M_Main_Key (int key)
 {
 	switch (key)
 	{
 	case K_ESCAPE:
+#ifdef FLASH
+		//For FLASH, we write config.cfg every time we leave the main menu.
+		//This is because we cant do it when we quit (as is done originally), 
+		//as you cant quit a flash app
+		
+		Host_WriteConfiguration();
+#endif
 		key_dest = key_game;
 		m_state = m_none;
 		cls.demonum = m_save_demonum;
@@ -1990,16 +1998,20 @@ forward:
 	}
 
 	if (DirectConfig && (serialConfig_cursor == 3 || serialConfig_cursor == 4))
+	{
 		if (key == K_UPARROW)
 			serialConfig_cursor = 2;
 		else
 			serialConfig_cursor = 5;
+	}
 
 	if (SerialConfig && StartingGame && serialConfig_cursor == 4)
+	{
 		if (key == K_UPARROW)
 			serialConfig_cursor = 3;
 		else
 			serialConfig_cursor = 5;
+	}
 }
 
 //=============================================================================
@@ -2363,10 +2375,12 @@ void M_LanConfig_Key (int key)
 	}
 
 	if (StartingGame && lanConfig_cursor == 2)
+	{
 		if (key == K_UPARROW)
 			lanConfig_cursor = 1;
 		else
 			lanConfig_cursor = 0;
+	}
 
 	l =  Q_atoi(lanConfig_portname);
 	if (l > 65535)
