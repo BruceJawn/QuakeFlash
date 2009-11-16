@@ -10,6 +10,7 @@
 	import flash.display.BitmapData;
 	import flash.geom.Rectangle;
 	import flash.net.SharedObject;
+	import flash.display.StageScaleMode;
 	
 	
 	/**
@@ -44,13 +45,12 @@
 			_loader = new CLibInit;
 			_swc = _loader.init();
 			
-			var pakFile:ByteArray = new EmbeddedPakClass;
-			var begintime:Number = getTimer() / 1000;
-			
+			var pakFile:ByteArray = new EmbeddedPakClass;			
 			_loader.supplyFile("./id1/pak0.pak", pakFile);
 
 			_swcRam = _swc.swcInit(this);
 			
+			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.addEventListener(Event.ENTER_FRAME, onFrame);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
@@ -64,8 +64,8 @@
 			if (!_bitmapData)
 			{
 				//Wait for the first frame before adding the bitmap.
-				var width:uint = 640;
-				var height:uint = 480;
+				var width:uint = 800;
+				var height:uint = 600;
 				_bitmapData = new BitmapData(width, height, false);
 				_rect = new Rectangle(0, 0, width, height);
 				_bitmap = new Bitmap(_bitmapData);
