@@ -268,20 +268,6 @@ static int closeByteArray(void * cookie)
 	return 0;
 }
 
-//AS3_Val newByteArray()
-//{
-//	AS3_Val byteArrayNS = AS3_String("flash.utils");
-//	AS3_Val byteArrayClass = AS3_NSGetS(byteArrayNS, "ByteArray");
-//	AS3_Val emptyParams = AS3_Array("");
-//	AS3_Val byteArrayObj = AS3_New(byteArrayClass, emptyParams);
-//
-//	AS3_Release(emptyParams);
-//	AS3_Release(byteArrayNS);
-//	AS3_Release(byteArrayClass);
-//	
-//	return byteArrayObj;
-//}
-
 FILE* openWriteFile(const char* filename)
 {
 	FILE* ret;
@@ -296,6 +282,18 @@ FILE* openWriteFile(const char* filename)
 
 	//This opens a file for writing on a ByteArray, as explained in http://blog.debit.nl/?p=79
 	ret = funopen((void *)byteArray, readByteArray, writeByteArray, seekByteArray, closeByteArray);
+
+	//{
+	//	//Test that the file opened for writing has size zero.
+	//	int endpos;		
+	//	//Move to the end and get position
+	//	fseek ( ret, 0, SEEK_END );
+	//	endpos = ftell ( ret );
+	//	fseek ( ret, 0, SEEK_SET );
+
+	//	//Check filesize, which should be 0
+	//	trace("Opened file for writing, OPENING FILESIZE (should be 0): %i", endpos);
+	//}
 
 	return ret;
 }
@@ -327,7 +325,7 @@ AS3_Val swcInit(void *data, AS3_Val args)
 
 	//Save the byte array, which will be read in COM_InitFilesystem
 	AS3_ArrayValue(args, "AS3ValType", &_swfMain);
-	
+
 	//Launch the quake init routines all the way until before the main loop
 	argc = 1;
 	argv = "";

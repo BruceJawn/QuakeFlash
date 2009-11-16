@@ -45,11 +45,10 @@
 			_loader = new CLibInit;
 			_swc = _loader.init();
 			
-			var pakFile:ByteArray = new EmbeddedPakClass;			
+			var pakFile:ByteArray = new EmbeddedPakClass;
 			_loader.supplyFile("./id1/pak0.pak", pakFile);
-
 			_swcRam = _swc.swcInit(this);
-			
+
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.addEventListener(Event.ENTER_FRAME, onFrame);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
@@ -86,7 +85,10 @@
 			_swc.swcKey(e.keyCode, 0);
 		}
 			
-		//private var _fileByteArrays:Object = new Object;
+		//We keep a record of the ByteArray for each file, because CLibInit.supplyFile
+		//only allows a file to be supplied with a ByteArray ONCE only.
+		private var _fileByteArrays:Array = new Array;
+		
 		public function readFileByteArray(filename:String):void
 		{
 			var sharedObject:SharedObject = SharedObject.getLocal(filename);
@@ -96,7 +98,14 @@
 			if (!sharedObject.data.byteArray)
 				return;	//Havent yet saved a shared object for this file
 				
-			_loader.supplyFile(filename, sharedObject.data.byteArray);
+			if (!_fileByteArrays[filename])
+			{
+				//This is the first time we are accessing this file, so record and supply the ByteArray for it
+				//from the SharedObject
+				var byteArray:ByteArray = sharedObject.data.byteArray;
+				_fileByteArrays[filename] = byteArray;
+				_loader.supplyFile(filename, byteArray);
+			}
 		}
 		
 		public function writeFileByteArray(filename:String):ByteArray
@@ -106,18 +115,25 @@
 				return undefined;	//Shared objects not enabled
 			
 			var byteArray:ByteArray;
-			if (!sharedObject.data.byteArray)
+			if (!_fileByteArrays[filename])
 			{
-				//Havent yet saved a shared object for this file
+				//Havent yet created a ByteArray for this file, so create a blank one.
 				byteArray = new ByteArray;
-				sharedObject.data.byteArray = byteArray;
+				_fileByteArrays[filename] = byteArray;
+				
+				//Supply the ByteArray as a file, so that it can also be read later on, if needed.
+				_loader.supplyFile(filename, byteArray);
 			}
 			else
 			{
-				byteArray = sharedObject.data.byteArray;
+				byteArray = _fileByteArrays[filename];
+				
+				//We are opening the file for writing, so reset its length to 0.
+				//Needed because this is NOT done by funopen(byteArray, ...)
 				byteArray.length = 0;
 			}
 			
+			//Return the ByteArray, allowing it to be opened as a FILE* for writing using funopen(byteArray, ...)
 			return byteArray;
 		}
 		
@@ -129,14 +145,14 @@
 			if (!sharedObject)
 				return;			//Shared objects not enabled
 				
-			if (!sharedObject.data.byteArray)
+			if (!_fileByteArrays[filename])
 			{
 				//This can happen if updateFileSharedObject is called before writeFileByteArray or readFileByteArray
 				trace("Error: updateFileSharedObject() called on a file without a ByteArray");
 			}
 			
+			sharedObject.data.byteArray = _fileByteArrays[filename];
 			sharedObject.flush();
-			_loader.supplyFile(filename, sharedObject.data.byteArray);
 		}
 	}
 }
