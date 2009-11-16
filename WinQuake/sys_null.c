@@ -173,16 +173,26 @@ void Sys_Printf (char *fmt, ...)
 
 void Sys_Quit (void)
 {
+#ifndef FLASH	//Cant quit on FLASH
 	exit (0);
+#endif
 }
+
+#ifdef FLASH
+double _as3Time;
+#endif
 
 double Sys_FloatTime (void)
 {
+#ifdef FLASH
+	return _as3Time;
+#else
 	static double t;
 	
 	t += 0.1;
 	
 	return t;
+#endif
 }
 
 char *Sys_ConsoleInput (void)
@@ -208,7 +218,194 @@ void Sys_LowFPPrecision (void)
 
 //=============================================================================
 
-void main (int argc, char **argv)
+
+#ifdef FLASH
+
+AS3_Val _swfMain;
+double _oldtime;
+
+void trace(char *fmt, ...)
+{
+	va_list		argptr;
+	char		msg[10000] = "TRACE: ";
+	AS3_Val as3Str;
+	
+	va_start (argptr,fmt);
+	vsprintf (&msg[7],fmt,argptr);
+	va_end (argptr);
+
+	as3Str = AS3_String(msg);
+	AS3_Trace(as3Str);
+	AS3_Release(as3Str);
+}
+
+/* Does a FILE * read against a ByteArray */
+static int readByteArray(void *cookie, char *dst, int size)
+{
+	return AS3_ByteArray_readBytes(dst, (AS3_Val)cookie, size);
+}
+ 
+/* Does a FILE * write against a ByteArray */
+static int writeByteArray(void *cookie, const char *src, int size)
+{
+	return AS3_ByteArray_writeBytes((AS3_Val)cookie, (char *)src, size);
+}
+ 
+/* Does a FILE * lseek against a ByteArray */
+static fpos_t seekByteArray(void *cookie, fpos_t offs, int whence)
+{
+	return AS3_ByteArray_seek((AS3_Val)cookie, offs, whence);
+}
+ 
+/* Does a FILE * close against a ByteArray */
+static int closeByteArray(void * cookie)
+{
+	AS3_Val zero = AS3_Int(0);
+ 
+	/* just reset the position */
+	AS3_SetS((AS3_Val)cookie, "position", zero);
+	AS3_Release(zero);
+	return 0;
+}
+
+//AS3_Val newByteArray()
+//{
+//	AS3_Val byteArrayNS = AS3_String("flash.utils");
+//	AS3_Val byteArrayClass = AS3_NSGetS(byteArrayNS, "ByteArray");
+//	AS3_Val emptyParams = AS3_Array("");
+//	AS3_Val byteArrayObj = AS3_New(byteArrayClass, emptyParams);
+//
+//	AS3_Release(emptyParams);
+//	AS3_Release(byteArrayNS);
+//	AS3_Release(byteArrayClass);
+//	
+//	return byteArrayObj;
+//}
+
+FILE* openWriteFile(const char* filename)
+{
+	FILE* ret;
+	AS3_Val byteArray;
+
+	AS3_Val params = AS3_Array(
+		"AS3ValType",
+		AS3_String(filename));
+	
+	byteArray = AS3_CallS("writeFileByteArray", _swfMain, params);
+	AS3_Release(params);
+
+	//This opens a file for writing on a ByteArray, as explained in http://blog.debit.nl/?p=79
+	ret = funopen((void *)byteArray, readByteArray, writeByteArray, seekByteArray, closeByteArray);
+
+	return ret;
+}
+
+void updateFileSharedObject(const char* filename)
+{
+	AS3_Val params = AS3_Array("AS3ValType", AS3_String(filename));
+
+	AS3_CallS("updateFileSharedObject", _swfMain, params);
+
+	AS3_Release(params);
+}
+
+void readFileSharedObject(const char* filename)
+{
+	AS3_Val params = AS3_Array("AS3ValType", AS3_String(filename));
+
+	AS3_CallS("readFileByteArray", _swfMain, params);
+
+	AS3_Release(params);
+}
+
+int swcQuakeInit (int argc, char **argv);
+
+AS3_Val swcInit(void *data, AS3_Val args)
+{
+	int argc;
+	char *argv;
+
+	//Save the byte array, which will be read in COM_InitFilesystem
+	AS3_ArrayValue(args, "AS3ValType", &_swfMain);
+	
+	//Launch the quake init routines all the way until before the main loop
+	argc = 1;
+	argv = "";
+	swcQuakeInit(argc, &argv);
+
+	//Return the ByteArray object representing all of the C++ ram - used to render the bitmap
+	return AS3_Ram();
+}
+
+AS3_Val swcFrame(void *data, AS3_Val args)
+{
+	AS3_ArrayValue(args, "DoubleType", &_as3Time);	//This will allow Sys_FloatTime() to work
+
+	if(!_oldtime)
+		_oldtime = Sys_FloatTime ();
+
+	{//Copied from the loop from the linux main function
+
+		double		time, newtime;
+
+// find time spent rendering last frame
+        newtime = Sys_FloatTime ();
+        time = newtime - _oldtime;
+
+        if (time > sys_ticrate.value*2)
+            _oldtime = newtime;
+        else
+            _oldtime += time;
+
+        Host_Frame (time);
+    }
+
+	//Return the position of the screen buffer in the Alchemy ByteArray of memory 
+	extern unsigned _vidBuffer4b[];
+	return AS3_Ptr(_vidBuffer4b);
+}
+
+AS3_Val swcKey(void *data, AS3_Val args)
+{
+	int key, state;
+
+	AS3_ArrayValue(args, "IntType,IntType", &key, &state);
+
+	extern byte _asToQKey[256];
+	Key_Event(_asToQKey[key], state);
+
+	return NULL;
+}
+
+int main (int c, char **v)
+{
+	int i;
+
+	AS3_Val swcEntries[] = 
+	{
+		AS3_Function(NULL, swcInit),
+		AS3_Function(NULL, swcFrame),
+		AS3_Function(NULL, swcKey),
+	};
+
+	// construct an object that holds refereces to the functions
+	AS3_Val result = AS3_Object(
+		"swcInit:AS3ValType,swcFrame:AS3ValType,swcKey:AS3ValType",
+		swcEntries[0], 
+		swcEntries[1],
+		swcEntries[2]);
+
+	for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
+		AS3_Release(swcEntries[i]);
+	
+	// notify that we initialized -- THIS DOES NOT RETURN!
+	AS3_LibInit(result);
+}
+
+int swcQuakeInit (int argc, char **argv)
+#else
+int main (int argc, char **argv)
+#endif
 {
 	static quakeparms_t    parms;
 
@@ -223,10 +420,15 @@ void main (int argc, char **argv)
 
 	printf ("Host_Init\n");
 	Host_Init (&parms);
+
+#ifndef FLASH
 	while (1)
 	{
 		Host_Frame (0.1);
 	}
+#endif
+
+	return 0;
 }
 
 

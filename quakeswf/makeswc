@@ -65,7 +65,7 @@ SRCS= \
 	../WinQuake/pr_exec.c \
 	../WinQuake/pr_edict.c \
 	../WinQuake/pr_cmds.c \
-	../WinQuake/sys_linux.c \
+	../WinQuake/sys_null.c \
 	../WinQuake/vid_null.c \
 	../WinQuake/cd_null.c \
 	../WinQuake/in_null.c \

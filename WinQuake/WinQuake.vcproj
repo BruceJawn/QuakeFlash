@@ -6252,6 +6252,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\quakeswf\src\Main.as"
+				>
+			</File>
+			<File
 				RelativePath="..\quakeswf\makeswc"
 				>
 			</File>

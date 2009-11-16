@@ -501,24 +501,14 @@ Key_WriteBindings
 Writes lines containing "bind key value"
 ============
 */
-void Key_WriteBindings (
-#ifdef FLASH
-						char **s
-#else
-						FILE *f
-#endif
-						)
+void Key_WriteBindings (FILE *f)
 {
 	int		i;
 
 	for (i=0 ; i<256 ; i++)
 		if (keybindings[i])
 			if (*keybindings[i])
-#ifdef FLASH
-				*s += sprintf (*s, "bind \"%s\" \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
-#else
 				fprintf (f, "bind \"%s\" \"%s\"\n", Key_KeynumToString(i), keybindings[i]);
-#endif
 }
 
 

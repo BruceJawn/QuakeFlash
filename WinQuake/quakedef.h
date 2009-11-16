@@ -49,8 +49,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AS3.h"
 
 void trace(char *fmt, ...);
-void swcSetSharedObject(const char* name, const char* value);
-char* swcGetSharedObject(const char* name);
+
+FILE* openWriteFile(const char* filename);
+void updateFileSharedObject(const char* filename);
+void readFileSharedObject(const char* filename);
+
 
 #else
 #define trace(a, ...)

@@ -292,17 +292,14 @@ void Cmd_Exec_f (void)
 	}
 
 	mark = Hunk_LowMark ();
-	f = (char *)COM_LoadHunkFile (Cmd_Argv(1));		//quake.rc and default.cfg are stored in the pak files
+#ifdef FLASH
+	readFileSharedObject(va("%s/%s", com_gamedir, Cmd_Argv(1)));//config.cfg is stored in the flash shared objects
+#endif
+	f = (char *)COM_LoadHunkFile (Cmd_Argv(1));
 	if (!f)
 	{
-	#ifdef FLASH
-		f = swcGetSharedObject(Cmd_Argv(1));		//config.cfg is stored in the flash shared objects
-		if (!f)
-	#endif
-		{
-			Con_Printf ("couldn't exec %s\n",Cmd_Argv(1));
-			return;
-		}
+		Con_Printf ("couldn't exec %s\n",Cmd_Argv(1));
+		return;
 	}
 	Con_Printf ("execing %s\n",Cmd_Argv(1));
 	

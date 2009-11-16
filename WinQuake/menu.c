@@ -463,11 +463,15 @@ void M_ScanSaves (void)
 		strcpy (m_filenames[i], "--- UNUSED SLOT ---");
 		loadable[i] = false;
 		sprintf (name, "%s/s%i.sav", com_gamedir, i);
+#ifdef FLASH
+		readFileSharedObject(name);
+#endif
 		f = fopen (name, "r");
 		if (!f)
 			continue;
 		fscanf (f, "%i\n", &version);
 		fscanf (f, "%79s\n", name);
+
 		strncpy (m_filenames[i], name, sizeof(m_filenames[i])-1);
 
 	// change _ back to space

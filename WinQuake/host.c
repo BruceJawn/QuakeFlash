@@ -245,31 +245,29 @@ Writes key bindings and archived cvars to config.cfg
 */
 void Host_WriteConfiguration (void)
 {
+	FILE	*f;
 // dedicated servers initialize the host but don't parse and set the
 // config.cfg cvars
 	if (host_initialized & !isDedicated)
 	{
+		const char* path = va("%s/config.cfg",com_gamedir);
 #ifdef FLASH
-		char configBuffer[10000];
-		char *s = configBuffer;
-		
-		Key_WriteBindings (&s);
-		Cvar_WriteVariables (&s);
-
-		swcSetSharedObject("config.cfg", configBuffer);
+		f = openWriteFile(path);
 #else
-		FILE	*f;
-		f = fopen (va("%s/config.cfg",com_gamedir), "w");
+		f = fopen (path, "w");
+#endif
 		if (!f)
 		{
 			Con_Printf ("Couldn't write config.cfg.\n");
 			return;
 		}
-		
+				
 		Key_WriteBindings (f);
 		Cvar_WriteVariables (f);
 
 		fclose (f);
+#ifdef FLASH
+		updateFileSharedObject(path);
 #endif
 	}
 

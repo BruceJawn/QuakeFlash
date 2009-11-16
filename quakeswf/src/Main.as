@@ -18,7 +18,7 @@
 	 */
 	public class Main extends Sprite 
 	{
-		
+		private var _loader:CLibInit;
 		private var _swc:Object;
 		private var _swcRam:ByteArray;
 		
@@ -27,7 +27,7 @@
 		private var _rect:Rectangle;
 		
 		[Embed(source="../embed/PAK0.PAK", mimeType="application/octet-stream")]
-		private var Embed_pak:Class;
+		private var EmbeddedPakClass:Class;
 		
 		public function Main():void 
 		{
@@ -41,12 +41,15 @@
 			// entry point
 						
 			//init swc
-			var loader:CLibInit = new CLibInit;
-			_swc = loader.init();
+			_loader = new CLibInit;
+			_swc = _loader.init();
 			
-			var pakFile:ByteArray = new Embed_pak;
+			var pakFile:ByteArray = new EmbeddedPakClass;
 			var begintime:Number = getTimer() / 1000;
-			_swcRam = _swc.swcInit(this, pakFile);
+			
+			_loader.supplyFile("./id1/pak0.pak", pakFile);
+
+			_swcRam = _swc.swcInit(this);
 			
 			stage.addEventListener(Event.ENTER_FRAME, onFrame);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
@@ -82,29 +85,58 @@
 		{
 			_swc.swcKey(e.keyCode, 0);
 		}
+			
+		//private var _fileByteArrays:Object = new Object;
+		public function readFileByteArray(filename:String):void
+		{
+			var sharedObject:SharedObject = SharedObject.getLocal(filename);
+			if (!sharedObject)
+				return;	//Shared objects not enabled
+			
+			if (!sharedObject.data.byteArray)
+				return;	//Havent yet saved a shared object for this file
+				
+			_loader.supplyFile(filename, sharedObject.data.byteArray);
+		}
+		
+		public function writeFileByteArray(filename:String):ByteArray
+		{
+			var sharedObject:SharedObject = SharedObject.getLocal(filename);
+			if (!sharedObject)
+				return undefined;	//Shared objects not enabled
+			
+			var byteArray:ByteArray;
+			if (!sharedObject.data.byteArray)
+			{
+				//Havent yet saved a shared object for this file
+				byteArray = new ByteArray;
+				sharedObject.data.byteArray = byteArray;
+			}
+			else
+			{
+				byteArray = sharedObject.data.byteArray;
+				byteArray.length = 0;
+			}
+			
+			return byteArray;
+		}
 		
 		//SharedObjects are used to save quake config files	
-		public function setSharedObject(name:String, value:String):void
+		public function updateFileSharedObject(filename:String):void
 		{
-			var sharedObject:SharedObject = SharedObject.getLocal(name);
+			var sharedObject:SharedObject = SharedObject.getLocal(filename);
 			
 			if (!sharedObject)
-				return;
+				return;			//Shared objects not enabled
 				
-			sharedObject.data.str = value;
+			if (!sharedObject.data.byteArray)
+			{
+				//This can happen if updateFileSharedObject is called before writeFileByteArray or readFileByteArray
+				trace("Error: updateFileSharedObject() called on a file without a ByteArray");
+			}
+			
 			sharedObject.flush();
-		}
-		public function getSharedObject(name:String):String
-		{
-			var sharedObject:SharedObject = SharedObject.getLocal(name);
-			if (!sharedObject)
-				return null;
-			
-			if (!sharedObject.data.str)
-				return null;
-			
-			return sharedObject.data.str;
+			_loader.supplyFile(filename, sharedObject.data.byteArray);
 		}
 	}
-	
 }

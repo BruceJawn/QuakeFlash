@@ -515,7 +515,11 @@ void Host_Savegame_f (void)
 	COM_DefaultExtension (name, ".sav");
 	
 	Con_Printf ("Saving game to %s...\n", name);
+#ifdef FLASH
+	f = openWriteFile(name);
+#else
 	f = fopen (name, "w");
+#endif
 	if (!f)
 	{
 		Con_Printf ("ERROR: couldn't open.\n");
@@ -549,6 +553,11 @@ void Host_Savegame_f (void)
 		fflush (f);
 	}
 	fclose (f);
+
+#ifdef FLASH
+	updateFileSharedObject(name);
+#endif
+
 	Con_Printf ("done.\n");
 }
 
@@ -590,6 +599,9 @@ void Host_Loadgame_f (void)
 //	SCR_BeginLoadingPlaque ();
 
 	Con_Printf ("Loading game from %s...\n", name);
+#ifdef FLASH
+	readFileSharedObject(name);
+#endif
 	f = fopen (name, "r");
 	if (!f)
 	{
