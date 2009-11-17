@@ -26,8 +26,10 @@ byte _asToQKey[256];
 void IN_Init (void)
 {
 	//Set the Actionscript to Quake keyboard mappings
-	//Copied from http://flash-creations.com/notes/asclass_key.php
 
+	_asToQKey[9] = K_TAB;
+
+	//Copied from http://flash-creations.com/notes/asclass_key.php
 	//Ascii()  	String  	Code
 /*27 	.(esc) 	*/ _asToQKey[27] = K_ESCAPE;
 /*8 	.(backspace) 	*/ _asToQKey[8] = K_BACKSPACE;
