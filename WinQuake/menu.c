@@ -1064,7 +1064,7 @@ void M_Menu_Options_f (void)
 	m_state = m_options;
 	m_entersound = true;
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(NULL_DRIVER)
 	if ((options_cursor == 13) && (modestate != MS_WINDOWED))
 	{
 		options_cursor = 0;
@@ -1235,7 +1235,7 @@ void M_Options_Draw (void)
 	if (vid_menudrawfn)
 		M_Print (16, 128, "         Video Options");
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(NULL_DRIVER)
 	if (modestate == MS_WINDOWED)
 	{
 		M_Print (16, 136, "             Use Mouse");
@@ -1310,7 +1310,7 @@ void M_Options_Key (int k)
 			options_cursor = 0;
 	}
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(NULL_DRIVER)
 	if ((options_cursor == 13) && (modestate != MS_WINDOWED))
 	{
 		if (k == K_UPARROW)

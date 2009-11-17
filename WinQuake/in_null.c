@@ -21,10 +21,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "quakedef.h"
 
+#ifdef FLASH
 byte _asToQKey[256];
+#endif
 
 void IN_Init (void)
 {
+#ifdef FLASH
 	//Set the Actionscript to Quake keyboard mappings
 
 	_asToQKey[9] = K_TAB;
@@ -196,7 +199,7 @@ void IN_Init (void)
 /*0 	(up) 	*/ _asToQKey[38] = K_UPARROW;
 /*0 	(down) 	*/ _asToQKey[40] = K_DOWNARROW;
 /*0 	(right) */ _asToQKey[39]  = K_RIGHTARROW;
-
+#endif //ifdef FLASH
 }
 
 void IN_Shutdown (void)

@@ -25,12 +25,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 viddef_t	vid;				// global video state
 
-#define	BASEWIDTH	800
-#define	BASEHEIGHT	600
+#define SURFCACHE_SIZE_AT_640X480	1344000
 
+#define	BASEWIDTH	640
+#define	BASEHEIGHT	480
 byte	vid_buffer[BASEWIDTH*BASEHEIGHT];
 short	zbuffer[BASEWIDTH*BASEHEIGHT];
-byte	surfcache[256*1024];
+byte	surfcache[SURFCACHE_SIZE_AT_640X480];
+
+//#define	BASEWIDTH	320
+//#define	BASEHEIGHT	200
+//byte	surfcache[SURFCACHE_SIZE_AT_320X200];
 
 unsigned _vidBuffer4b[BASEWIDTH*BASEHEIGHT];//This is created from the palette every frame, and is suitable for FLASH BitmapData
 
@@ -70,8 +75,10 @@ void	VID_ShiftPalette (unsigned char *palette)
 
 void	VID_Init (unsigned char *palette)
 {
-	vid.maxwarpwidth = vid.width = vid.conwidth = BASEWIDTH;
-	vid.maxwarpheight = vid.height = vid.conheight = BASEHEIGHT;
+	vid.width = vid.conwidth = BASEWIDTH;
+	vid.height = vid.conheight = BASEHEIGHT;
+	vid.maxwarpwidth = WARP_WIDTH;
+	vid.maxwarpheight = WARP_HEIGHT;
 	vid.aspect = 1.0;
 	vid.numpages = 1;
 	vid.colormap = host_colormap;

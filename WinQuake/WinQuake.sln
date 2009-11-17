@@ -10,15 +10,15 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winquake", "WinQuake.vcproj
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug No Asm|Win32 = Debug No Asm|Win32
+		Debug Null Driver|Win32 = Debug Null Driver|Win32
 		Debug|Win32 = Debug|Win32
 		GL Debug|Win32 = GL Debug|Win32
 		GL Release|Win32 = GL Release|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Debug No Asm|Win32.ActiveCfg = Debug|Win32
-		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Debug No Asm|Win32.Build.0 = Debug|Win32
+		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Debug Null Driver|Win32.ActiveCfg = Debug|Win32
+		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Debug Null Driver|Win32.Build.0 = Debug|Win32
 		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Debug|Win32.ActiveCfg = Debug|Win32
 		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Debug|Win32.Build.0 = Debug|Win32
 		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.GL Debug|Win32.ActiveCfg = Debug|Win32
@@ -27,10 +27,10 @@ Global
 		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.GL Release|Win32.Build.0 = Release|Win32
 		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Release|Win32.ActiveCfg = Release|Win32
 		{9D2DED1A-9030-444B-9DC5-560A42E9CCC4}.Release|Win32.Build.0 = Release|Win32
-		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug No Asm|Win32.ActiveCfg = Debug No Asm|Win32
-		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug No Asm|Win32.Build.0 = Debug No Asm|Win32
-		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug|Win32.ActiveCfg = Debug|Win32
-		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug|Win32.Build.0 = Debug|Win32
+		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug Null Driver|Win32.ActiveCfg = Debug Null Driver|Win32
+		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug Null Driver|Win32.Build.0 = Debug Null Driver|Win32
+		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug|Win32.ActiveCfg = Debug No Asm|Win32
+		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.Debug|Win32.Build.0 = Debug No Asm|Win32
 		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.GL Debug|Win32.ActiveCfg = GL Debug|Win32
 		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.GL Debug|Win32.Build.0 = GL Debug|Win32
 		{5EADA658-0BF6-4CFA-AA00-B45D3B183778}.GL Release|Win32.ActiveCfg = GL Release|Win32

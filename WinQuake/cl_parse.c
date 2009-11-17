@@ -884,14 +884,14 @@ void CL_ParseServerMessage (void)
 				if (cl.paused)
 				{
 					CDAudio_Pause ();
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(NULL_DRIVER)
 					VID_HandlePause (true);
 #endif
 				}
 				else
 				{
 					CDAudio_Resume ();
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(NULL_DRIVER)
 					VID_HandlePause (false);
 #endif
 				}

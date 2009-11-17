@@ -22,6 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "quakedef.h"
 #include "errno.h"
 
+qboolean			isDedicated;	//Always false for Null Driver
+cvar_t		_windowed_mouse = {"_windowed_mouse","0", true};
+
 /*
 ===============================================================================
 
@@ -215,6 +218,13 @@ void Sys_HighFPPrecision (void)
 void Sys_LowFPPrecision (void)
 {
 }
+
+#if defined(NULL_DRIVER)
+
+void	VID_LockBuffer (void) {}
+void	VID_UnlockBuffer (void) {}
+
+#endif
 
 //=============================================================================
 
