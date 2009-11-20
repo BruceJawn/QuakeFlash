@@ -50,9 +50,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void trace(char *fmt, ...);
 
-FILE* openWriteFile(const char* filename);
-void updateFileSharedObject(const char* filename);
-void readFileSharedObject(const char* filename);
+FILE* as3OpenWriteFile(const char* filename);
+void as3UpdateFileSharedObject(const char* filename);
+void as3ReadFileSharedObject(const char* filename);
 
 
 #else

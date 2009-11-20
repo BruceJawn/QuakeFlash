@@ -278,7 +278,7 @@ static int closeByteArray(void * cookie)
 	return 0;
 }
 
-FILE* openWriteFile(const char* filename)
+FILE* as3OpenWriteFile(const char* filename)
 {
 	FILE* ret;
 	AS3_Val byteArray;
@@ -308,7 +308,7 @@ FILE* openWriteFile(const char* filename)
 	return ret;
 }
 
-void updateFileSharedObject(const char* filename)
+void as3UpdateFileSharedObject(const char* filename)
 {
 	AS3_Val params = AS3_Array("AS3ValType", AS3_String(filename));
 
@@ -317,7 +317,7 @@ void updateFileSharedObject(const char* filename)
 	AS3_Release(params);
 }
 
-void readFileSharedObject(const char* filename)
+void as3ReadFileSharedObject(const char* filename)
 {
 	AS3_Val params = AS3_Array("AS3ValType", AS3_String(filename));
 

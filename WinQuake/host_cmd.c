@@ -516,7 +516,7 @@ void Host_Savegame_f (void)
 	
 	Con_Printf ("Saving game to %s...\n", name);
 #ifdef FLASH
-	f = openWriteFile(name);
+	f = as3OpenWriteFile(name);
 #else
 	f = fopen (name, "w");
 #endif
@@ -555,7 +555,7 @@ void Host_Savegame_f (void)
 	fclose (f);
 
 #ifdef FLASH
-	updateFileSharedObject(name);
+	as3UpdateFileSharedObject(name);
 #endif
 
 	Con_Printf ("done.\n");
@@ -600,7 +600,7 @@ void Host_Loadgame_f (void)
 
 	Con_Printf ("Loading game from %s...\n", name);
 #ifdef FLASH
-	readFileSharedObject(name);
+	as3ReadFileSharedObject(name);
 #endif
 	f = fopen (name, "r");
 	if (!f)

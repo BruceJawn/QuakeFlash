@@ -745,6 +745,10 @@ keypress.
 */
 int SCR_ModalMessage (char *text)
 {
+#ifdef FLASH
+	return true;	//For Flash we receive key messages via the Main.as file, between calls to the Alchemy C source.
+					//We therefore cant check what the user response was, so we just assume that it was 'yes'.
+#else
 	if (cls.state == ca_dedicated)
 		return true;
 
@@ -768,6 +772,7 @@ int SCR_ModalMessage (char *text)
 	SCR_UpdateScreen ();
 
 	return key_lastpress == 'y';
+#endif
 }
 
 

@@ -464,7 +464,7 @@ void M_ScanSaves (void)
 		loadable[i] = false;
 		sprintf (name, "%s/s%i.sav", com_gamedir, i);
 #ifdef FLASH
-		readFileSharedObject(name);
+		as3ReadFileSharedObject(name);
 #endif
 		f = fopen (name, "r");
 		if (!f)

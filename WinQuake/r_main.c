@@ -51,7 +51,9 @@ int			r_clipflags;
 
 byte		*r_warpbuffer;
 
+#ifndef FLASH
 byte		*r_stack_start;
+#endif
 
 qboolean	r_fov_greater_than_90;
 
@@ -182,10 +184,12 @@ R_Init
 */
 void R_Init (void)
 {
+#ifndef FLASH
 	int		dummy;
 	
 // get stack position so we can guess if we are going to overflow
 	r_stack_start = (byte *)&dummy;
+#endif
 	
 	R_InitTurb ();
 	
@@ -1049,11 +1053,14 @@ SetVisibilityByPassages ();
 void R_RenderView (void)
 {
 	int		dummy;
+
+#ifndef FLASH
+	//This causes problems for Flash when not using -O3
 	int		delta;
-	
 	delta = (byte *)&dummy - r_stack_start;
 	if (delta < -10000 || delta > 10000)
 		Sys_Error ("R_RenderView: called without enough stack");
+#endif
 
 	if ( Hunk_LowMark() & 3 )
 		Sys_Error ("Hunk is missaligned");

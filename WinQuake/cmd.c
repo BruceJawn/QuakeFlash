@@ -293,7 +293,7 @@ void Cmd_Exec_f (void)
 
 	mark = Hunk_LowMark ();
 #ifdef FLASH
-	readFileSharedObject(va("%s/%s", com_gamedir, Cmd_Argv(1)));//config.cfg is stored in the flash shared objects
+	as3ReadFileSharedObject(va("%s/%s", com_gamedir, Cmd_Argv(1)));//config.cfg is stored in the flash shared objects
 #endif
 	f = (char *)COM_LoadHunkFile (Cmd_Argv(1));
 	if (!f)

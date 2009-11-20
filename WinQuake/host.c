@@ -252,7 +252,7 @@ void Host_WriteConfiguration (void)
 	{
 		const char* path = va("%s/config.cfg",com_gamedir);
 #ifdef FLASH
-		f = openWriteFile(path);
+		f = as3OpenWriteFile(path);
 #else
 		f = fopen (path, "w");
 #endif
@@ -267,7 +267,7 @@ void Host_WriteConfiguration (void)
 
 		fclose (f);
 #ifdef FLASH
-		updateFileSharedObject(path);
+		as3UpdateFileSharedObject(path);
 #endif
 	}
 
