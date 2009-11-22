@@ -54,9 +54,14 @@ FILE* as3OpenWriteFile(const char* filename);
 void as3UpdateFileSharedObject(const char* filename);
 void as3ReadFileSharedObject(const char* filename);
 
+//For Flash, we need to swap round the arguments for atan2
+#define myAtan2(opp, adj) atan2(adj, opp)
 
 #else
 #define trace(a, ...)
+
+#define myAtan2(opp, adj) atan2(opp, adj)
+
 #endif
 
 #if defined(_WIN32) && !defined(WINDED)
