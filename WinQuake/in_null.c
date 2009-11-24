@@ -23,11 +23,22 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef FLASH
 byte _asToQKey[256];
+
+float	mouse_x, mouse_y;
+float	old_mouse_x, old_mouse_y;
+
+cvar_t	m_filter = {"m_filter","0"};
+
 #endif
 
 void IN_Init (void)
 {
 #ifdef FLASH
+	Cvar_RegisterVariable (&m_filter);
+
+	//Use mouse look by default
+	in_mlook.state = 1;
+
 	//Set the Actionscript to Quake keyboard mappings
 
 	_asToQKey[9] = K_TAB;
@@ -210,7 +221,57 @@ void IN_Commands (void)
 {
 }
 
+#ifdef FLASH
+void IN_MouseMove (usercmd_t *cmd)
+{
+	float mx = mouse_x;
+	float my = mouse_y;
+
+	if (m_filter.value)
+	{
+		mouse_x = (mouse_x + old_mouse_x) * 0.5;
+		mouse_y = (mouse_y + old_mouse_y) * 0.5;
+	}
+	old_mouse_x = mx;
+	old_mouse_y = my;
+
+	mouse_x *= sensitivity.value;
+	mouse_y *= sensitivity.value;
+
+// add mouse X/Y movement to cmd
+	if ( (in_strafe.state & 1) || (lookstrafe.value && (in_mlook.state & 1) ))
+		cmd->sidemove += m_side.value * mouse_x;
+	else
+		cl.viewangles[YAW] -= m_yaw.value * mouse_x;
+	
+	if (in_mlook.state & 1)
+		V_StopPitchDrift ();
+		
+	if ( (in_mlook.state & 1) && !(in_strafe.state & 1))
+	{
+		cl.viewangles[PITCH] += m_pitch.value * mouse_y;
+		if (cl.viewangles[PITCH] > 80)
+			cl.viewangles[PITCH] = 80;
+		if (cl.viewangles[PITCH] < -70)
+			cl.viewangles[PITCH] = -70;
+	}
+	else
+	{
+		if ((in_strafe.state & 1) && noclip_anglehack)
+			cmd->upmove -= m_forward.value * mouse_y;
+		else
+			cmd->forwardmove -= m_forward.value * mouse_y;
+	}
+
+	mouse_x = 0.0f;
+	mouse_y = 0.0f;
+}
+#endif
+
 void IN_Move (usercmd_t *cmd)
 {
+#ifdef FLASH
+	IN_MouseMove(cmd);
+#endif
 }
 

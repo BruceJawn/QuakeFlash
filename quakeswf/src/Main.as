@@ -3,6 +3,8 @@
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.events.MouseEvent;
+	import flash.ui.Mouse;
 	import flash.utils.ByteArray;
 	import cmodule.quake.CLibInit;
 	import flash.utils.getTimer;
@@ -32,6 +34,9 @@
 		private var _sound:Sound;
 		private var _soundChannel:SoundChannel;
 		private var _lastSampleDataPosition:int;//Reset to 0 everytime a restart the sound.
+		
+		private var _oldmouseX:int, _oldmouseY:int;
+		private var _buttonDown:Boolean = false;
 				
 		[Embed(source="../embed/PAK0.PAK", mimeType="application/octet-stream")]
 		private var EmbeddedPakClass:Class;
@@ -59,14 +64,29 @@
 			_loader.supplyFile("./id1/pak0.pak", pakFile);
 			_swcRam = _swc.swcInit(this);
 
-			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.scaleMode = StageScaleMode.SHOW_ALL;
 			stage.addEventListener(Event.ENTER_FRAME, onFrame);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);
+			stage.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+			stage.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
 		}
 		
 		private function onFrame(e:Event):void
 		{
+			//Check for mouse movement. It is much more accurate to do this every frame than in a MOUSE_MOVE event.
+			if(_buttonDown)
+			{
+				var deltaX:int = mouseX - _oldmouseX;
+				var deltaY:int = mouseY - _oldmouseY;
+				
+				const MOUSE_MULTIPLIER:Number = 8;
+				_swc.swcDeltaMouse(deltaX * MOUSE_MULTIPLIER, deltaY * MOUSE_MULTIPLIER);
+			}
+			_oldmouseX = mouseX;
+			_oldmouseY = mouseY;
+			
+			//Run the game frame, and get the pointer to its frame buffer
 			var newTime:Number = getTimer() / 1000;
 			var ptr:uint = _swc.swcFrame(newTime);
 										
@@ -101,39 +121,13 @@
 		private function sampleDataHandler(event:SampleDataEvent):void
 		{
 			//The sound channel is requesting more samples. If it ever runs out then a sound complete message will occur.
-			
-			//trace("sampleDataHandler BEFORE event.data.length/4: ", event.data.length / 4, ", event.data.position/4: ", event.data.position / 4,
-			//	", event.position: ", event.position);
-			
-			//{
-				//Test sine wave
-				//var frequency:Number= 440;
-				//var gain:Number= 0.25;
-				//var rate:int= 44100;
-				//var pitch:Number= rate / frequency;
-				//for (var i:int = 0; i < 8192; i++) 
-				//{
-					//var pos:int= i + event.position;
-					//var phase:Number= (pos % pitch) / pitch; // 0 <= phase < pitch
-					//var v:Number= Math.sin(2 * Math.PI * phase) * gain;
-					 //var v:Number= phase < 0.5 ? gain : -gain; // Rectangle Wave
-					//
-					//event.data.writeFloat(v);
-					//event.data.writeFloat(v);
-				//}
-			//}
-			
+					
 			//Ask the game to paint its channels to our sample ByteArray.
 			//Also need to supply a deltaT to update the game's internal sound time.
 			var soundDeltaT:int = event.position - _lastSampleDataPosition;
 			_swc.swcWriteSoundData(event.data, soundDeltaT);
 			_lastSampleDataPosition = event.position;
-			
-			//trace("sampleDataHandler AFTER event.data.length/4: ", event.data.length / 4, ", event.data.position/4: ", event.data.position / 4,
-			//	", event.position: ", event.position);
 		}
-		
-		
 		
 		private function onKeyDown( e:KeyboardEvent ):void
 		{
@@ -144,7 +138,19 @@
 		{
 			_swc.swcKey(e.keyCode, 0);
 		}
-			
+		private function onMouseDown(e:MouseEvent):void 
+		{
+			_oldmouseX = mouseX;
+			_oldmouseY = mouseY;
+			_buttonDown = true;
+			Mouse.hide();
+		}
+		private function onMouseUp(e:MouseEvent):void 
+		{
+			_buttonDown = false;
+			Mouse.show();
+		}
+
 		//We keep a record of the ByteArray for each file, because CLibInit.supplyFile
 		//only allows a file to be supplied with a ByteArray ONCE only.
 		private var _fileByteArrays:Array = new Array;

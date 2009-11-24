@@ -884,6 +884,8 @@ void S_Update_(void)
 		paintedtime = soundtime;
 	}
 
+	//OutputDebugString(va("paintedtime: %i, soundtime: %i\n", paintedtime, soundtime));
+
 // mix ahead of current position
 	endtime = soundtime + _snd_mixahead.value * shm->speed;
 	samps = shm->samples >> (shm->channels-1);

@@ -400,6 +400,18 @@ AS3_Val swcKey(void *data, AS3_Val args)
 	return NULL;
 }
 
+extern float mouse_x, mouse_y;
+AS3_Val swcDeltaMouse(void *data, AS3_Val args)
+{
+	int deltaX, deltaY;
+	AS3_ArrayValue(args, "IntType,IntType", &deltaX, &deltaY);
+
+	mouse_x = deltaX;
+	mouse_y = deltaY;
+
+	return NULL;
+}
+
 int main (int c, char **v)
 {
 	int i;
@@ -409,16 +421,18 @@ int main (int c, char **v)
 		AS3_Function(NULL, swcInit),
 		AS3_Function(NULL, swcFrame),		
 		AS3_Function(NULL, swcKey),
+		AS3_Function(NULL, swcDeltaMouse),
 		AS3_Function(NULL, swcWriteSoundData)
 	};
 
 	// construct an object that holds refereces to the functions
 	AS3_Val result = AS3_Object(
-		"swcInit:AS3ValType,swcFrame:AS3ValType,swcKey:AS3ValType,swcWriteSoundData:AS3ValType",
+		"swcInit:AS3ValType,swcFrame:AS3ValType,swcKey:AS3ValType,swcDeltaMouse:AS3ValType,swcWriteSoundData:AS3ValType",
 		swcEntries[0],
 		swcEntries[1],
 		swcEntries[2],
-		swcEntries[3]);
+		swcEntries[3],
+		swcEntries[4]);
 
 	for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
 		AS3_Release(swcEntries[i]);

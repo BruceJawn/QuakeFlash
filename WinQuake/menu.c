@@ -1557,6 +1557,10 @@ void M_Menu_Help_f (void)
 void M_Help_Draw (void)
 {
 	M_DrawPic (0, 0, Draw_CachePic ( va("gfx/help%i.lmp", help_page)) );
+
+#ifdef FLASH
+	M_Print (20, 210, va("Quake %4.2f ported by Michael Rennie\n", VERSION));
+#endif
 }
 
 
