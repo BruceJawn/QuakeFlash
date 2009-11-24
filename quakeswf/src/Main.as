@@ -11,7 +11,9 @@
 	import flash.geom.Rectangle;
 	import flash.net.SharedObject;
 	import flash.display.StageScaleMode;
-	
+	import flash.events.SampleDataEvent;
+	import flash.media.SoundChannel;
+	import flash.media.Sound;
 	
 	/**
 	 * ...
@@ -26,7 +28,11 @@
 		private var _bitmapData:BitmapData;//This is null until after we have called the first _swc.swcFrame()
 		private var _bitmap:Bitmap;
 		private var _rect:Rectangle;
-		
+	
+		private var _sound:Sound;
+		private var _soundChannel:SoundChannel;
+		private var _lastSampleDataPosition:int;//Reset to 0 everytime a restart the sound.
+				
 		[Embed(source="../embed/PAK0.PAK", mimeType="application/octet-stream")]
 		private var EmbeddedPakClass:Class;
 		
@@ -35,12 +41,16 @@
 			if (stage) init();
 			else addEventListener(Event.ADDED_TO_STAGE, init);
 		}
-		
+				
 		private function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
-						
+
+			_sound = new Sound();
+			_sound.addEventListener( SampleDataEvent.SAMPLE_DATA, sampleDataHandler );
+			//_soundBuffer = new ByteArray;
+			
 			//init swc
 			_loader = new CLibInit;
 			_swc = _loader.init();
@@ -58,7 +68,7 @@
 		private function onFrame(e:Event):void
 		{
 			var newTime:Number = getTimer() / 1000;
-			var screenBufferPos:uint = _swc.swcFrame(newTime);
+			var ptr:uint = _swc.swcFrame(newTime);
 										
 			if (!_bitmapData)
 			{
@@ -70,10 +80,60 @@
 				_bitmap = new Bitmap(_bitmapData);
 				addChild(_bitmap);
 			}
-			
-			_swcRam.position = screenBufferPos;
+			_swcRam.position = ptr;
 			_bitmapData.setPixels(_rect, _swcRam);
+					
+			if (!_soundChannel)
+			{
+				_lastSampleDataPosition = 0;
+				_soundChannel = _sound.play();
+				_soundChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+			}
 		}
+		
+		private function soundCompleteHandler(e:Event):void
+		{
+			//The sound stopped playing because it ran out of samples, so make it restart next frame.
+			_soundChannel.removeEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+			_soundChannel = null;
+		}
+		
+		private function sampleDataHandler(event:SampleDataEvent):void
+		{
+			//The sound channel is requesting more samples. If it ever runs out then a sound complete message will occur.
+			
+			//trace("sampleDataHandler BEFORE event.data.length/4: ", event.data.length / 4, ", event.data.position/4: ", event.data.position / 4,
+			//	", event.position: ", event.position);
+			
+			//{
+				//Test sine wave
+				//var frequency:Number= 440;
+				//var gain:Number= 0.25;
+				//var rate:int= 44100;
+				//var pitch:Number= rate / frequency;
+				//for (var i:int = 0; i < 8192; i++) 
+				//{
+					//var pos:int= i + event.position;
+					//var phase:Number= (pos % pitch) / pitch; // 0 <= phase < pitch
+					//var v:Number= Math.sin(2 * Math.PI * phase) * gain;
+					 //var v:Number= phase < 0.5 ? gain : -gain; // Rectangle Wave
+					//
+					//event.data.writeFloat(v);
+					//event.data.writeFloat(v);
+				//}
+			//}
+			
+			//Ask the game to paint its channels to our sample ByteArray.
+			//Also need to supply a deltaT to update the game's internal sound time.
+			var soundDeltaT:int = event.position - _lastSampleDataPosition;
+			_swc.swcWriteSoundData(event.data, soundDeltaT);
+			_lastSampleDataPosition = event.position;
+			
+			//trace("sampleDataHandler AFTER event.data.length/4: ", event.data.length / 4, ", event.data.position/4: ", event.data.position / 4,
+			//	", event.position: ", event.position);
+		}
+		
+		
 		
 		private function onKeyDown( e:KeyboardEvent ):void
 		{

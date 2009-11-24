@@ -373,6 +373,21 @@ AS3_Val swcFrame(void *data, AS3_Val args)
 	return AS3_Ptr(_vidBuffer4b);
 }
 
+extern AS3_Val _flashSampleData;
+extern int soundtime;
+void S_Update_();
+
+AS3_Val swcWriteSoundData(void *data, AS3_Val args)
+{
+	int soundDeltaT;
+
+	AS3_ArrayValue(args, "AS3ValType,IntType", &_flashSampleData, &soundDeltaT);
+	soundtime += soundDeltaT;
+	S_Update_();
+	
+	return NULL;
+}
+
 AS3_Val swcKey(void *data, AS3_Val args)
 {
 	int key, state;
@@ -392,16 +407,18 @@ int main (int c, char **v)
 	AS3_Val swcEntries[] = 
 	{
 		AS3_Function(NULL, swcInit),
-		AS3_Function(NULL, swcFrame),
+		AS3_Function(NULL, swcFrame),		
 		AS3_Function(NULL, swcKey),
+		AS3_Function(NULL, swcWriteSoundData)
 	};
 
 	// construct an object that holds refereces to the functions
 	AS3_Val result = AS3_Object(
-		"swcInit:AS3ValType,swcFrame:AS3ValType,swcKey:AS3ValType",
-		swcEntries[0], 
+		"swcInit:AS3ValType,swcFrame:AS3ValType,swcKey:AS3ValType,swcWriteSoundData:AS3ValType",
+		swcEntries[0],
 		swcEntries[1],
-		swcEntries[2]);
+		swcEntries[2],
+		swcEntries[3]);
 
 	for(i = 0; i < sizeof(swcEntries)/sizeof(swcEntries[0]); i++)
 		AS3_Release(swcEntries[i]);
