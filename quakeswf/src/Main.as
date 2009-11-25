@@ -39,7 +39,9 @@
 		private var _buttonDown:Boolean = false;
 				
 		[Embed(source="../embed/PAK0.PAK", mimeType="application/octet-stream")]
-		private var EmbeddedPakClass:Class;
+		private var EmbeddedPak:Class;
+		[Embed(source="../embed/config.cfg", mimeType="application/octet-stream")]
+		private var EmbeddedDefaultConfig:Class;
 		
 		public function Main():void 
 		{
@@ -60,7 +62,12 @@
 			_loader = new CLibInit;
 			_swc = _loader.init();
 			
-			var pakFile:ByteArray = new EmbeddedPakClass;
+			//If we havent already got a config.cfg saved in the SharedObjects, then we load the embedded one.
+			//This will override some default controls from default.cfg inside the pak file, which 99% of users will change. 
+			//(WASD keys, as well as Always Run).
+			fileSupplyDefaultEmbedded("./id1/config.cfg", EmbeddedDefaultConfig);
+			
+			var pakFile:ByteArray = new EmbeddedPak;
 			_loader.supplyFile("./id1/pak0.pak", pakFile);
 			_swcRam = _swc.swcInit(this);
 
@@ -154,14 +161,25 @@
 		//only allows a file to be supplied with a ByteArray ONCE only.
 		private var _fileByteArrays:Array = new Array;
 		
-		public function readFileByteArray(filename:String):void
+		public function fileSupplyDefaultEmbedded(filename:String, defaultEmbed:Class):void
+		{
+			if (!fileReadSharedObject(filename))//Check if its in the SharedObjects first
+			{
+				//Havent yet got the file saved in the SharedObjects, so we load the embedded data as its default value.
+				
+				var file:ByteArray = new defaultEmbed;
+				_fileByteArrays[filename] = file;	//So that we can still overwrite it
+				_loader.supplyFile(filename, file);//So that it can be read later on
+			}
+		}
+		public function fileReadSharedObject(filename:String):Boolean
 		{
 			var sharedObject:SharedObject = SharedObject.getLocal(filename);
 			if (!sharedObject)
-				return;	//Shared objects not enabled
+				return false;	//Shared objects not enabled
 			
 			if (!sharedObject.data.byteArray)
-				return;	//Havent yet saved a shared object for this file
+				return false;	//Havent yet saved a shared object for this file
 				
 			if (!_fileByteArrays[filename])
 			{
@@ -171,9 +189,10 @@
 				_fileByteArrays[filename] = byteArray;
 				_loader.supplyFile(filename, byteArray);
 			}
+			
+			return true;//We did find its SharedObject, so return true
 		}
-		
-		public function writeFileByteArray(filename:String):ByteArray
+		public function fileWriteSharedObject(filename:String):ByteArray
 		{
 			var sharedObject:SharedObject = SharedObject.getLocal(filename);
 			if (!sharedObject)
@@ -203,7 +222,7 @@
 		}
 		
 		//SharedObjects are used to save quake config files	
-		public function updateFileSharedObject(filename:String):void
+		public function fileUpdateSharedObject(filename:String):void
 		{
 			var sharedObject:SharedObject = SharedObject.getLocal(filename);
 			
@@ -212,8 +231,8 @@
 				
 			if (!_fileByteArrays[filename])
 			{
-				//This can happen if updateFileSharedObject is called before writeFileByteArray or readFileByteArray
-				trace("Error: updateFileSharedObject() called on a file without a ByteArray");
+				//This can happen if fileUpdateSharedObject is called before fileWriteSharedObject or fileReadSharedObject
+				trace("Error: fileUpdateSharedObject() called on a file without a ByteArray");
 			}
 			
 			sharedObject.data.byteArray = _fileByteArrays[filename];

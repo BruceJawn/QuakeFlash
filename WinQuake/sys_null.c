@@ -287,24 +287,13 @@ FILE* as3OpenWriteFile(const char* filename)
 		"AS3ValType",
 		AS3_String(filename));
 	
-	byteArray = AS3_CallS("writeFileByteArray", _swfMain, params);
+	byteArray = AS3_CallS("fileWriteSharedObject", _swfMain, params);
 	AS3_Release(params);
 
 	//This opens a file for writing on a ByteArray, as explained in http://blog.debit.nl/?p=79
+	//It does NOT reset its length to 0, so this must already have been done.
 	ret = funopen((void *)byteArray, readByteArray, writeByteArray, seekByteArray, closeByteArray);
-
-	//{
-	//	//Test that the file opened for writing has size zero.
-	//	int endpos;		
-	//	//Move to the end and get position
-	//	fseek ( ret, 0, SEEK_END );
-	//	endpos = ftell ( ret );
-	//	fseek ( ret, 0, SEEK_SET );
-
-	//	//Check filesize, which should be 0
-	//	trace("Opened file for writing, OPENING FILESIZE (should be 0): %i", endpos);
-	//}
-
+	
 	return ret;
 }
 
@@ -312,7 +301,7 @@ void as3UpdateFileSharedObject(const char* filename)
 {
 	AS3_Val params = AS3_Array("AS3ValType", AS3_String(filename));
 
-	AS3_CallS("updateFileSharedObject", _swfMain, params);
+	AS3_CallS("fileUpdateSharedObject", _swfMain, params);
 
 	AS3_Release(params);
 }
@@ -321,7 +310,7 @@ void as3ReadFileSharedObject(const char* filename)
 {
 	AS3_Val params = AS3_Array("AS3ValType", AS3_String(filename));
 
-	AS3_CallS("readFileByteArray", _swfMain, params);
+	AS3_CallS("fileReadSharedObject", _swfMain, params);
 
 	AS3_Release(params);
 }
