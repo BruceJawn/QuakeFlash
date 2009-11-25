@@ -33,12 +33,14 @@
 			addChild(preloader);
 			
 			progressText = new TextField();
+			progressText.selectable = false;
 			var progressTextFormat:TextFormat = new TextFormat("_sans", 16, 0xFFFFFF, true);
 			progressTextFormat.align = TextFormatAlign.CENTER;
 			progressText.defaultTextFormat = progressTextFormat;
 			addChild(progressText);
 			
 			infoText = new TextField();
+			infoText.selectable = false;
 			infoText.width = 300;
 			infoText.defaultTextFormat = progressTextFormat;
 			infoText.text = "Quake created by ID Software\nPorted to Flash by Michael Rennie";
