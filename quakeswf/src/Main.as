@@ -64,7 +64,6 @@
 			_loader.supplyFile("./id1/pak0.pak", pakFile);
 			_swcRam = _swc.swcInit(this);
 
-			stage.scaleMode = StageScaleMode.SHOW_ALL;
 			stage.addEventListener(Event.ENTER_FRAME, onFrame);
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 			stage.addEventListener(KeyboardEvent.KEY_UP, onKeyUp);

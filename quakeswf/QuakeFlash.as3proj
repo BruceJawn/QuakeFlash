@@ -4,8 +4,8 @@
   <output>
     <movie disabled="False" />
     <movie input="" />
-    <movie path="bin\quakeswf.swf" />
-    <movie fps="30" />
+    <movie path="bin\QuakeFlash.swf" />
+    <movie fps="100" />
     <movie width="640" />
     <movie height="480" />
     <movie version="10" />
@@ -34,7 +34,7 @@
     <option verboseStackTraces="False" />
     <option linkReport="" />
     <option loadExterns="" />
-    <option additional="" />
+    <option additional="-frame start Main" />
     <option customSDK="" />
   </build>
   <!-- SWC Include Libraries -->
@@ -63,11 +63,11 @@
   </library>
   <!-- Class files to compile (other referenced classes will automatically be included) -->
   <compileTargets>
-    <compile path="src\Main.as" />
+    <compile path="src\Preloader.as" />
   </compileTargets>
   <!-- Paths to exclude from the Project Explorer tree -->
   <hiddenPaths>
-    <hidden path="Release" />
+    <!-- example: <hidden path="..." /> -->
   </hiddenPaths>
   <!-- Executed before build -->
   <preBuildCommand />
