@@ -56,7 +56,6 @@
 
 			_sound = new Sound();
 			_sound.addEventListener( SampleDataEvent.SAMPLE_DATA, sampleDataHandler );
-			//_soundBuffer = new ByteArray;
 			
 			//init swc
 			_loader = new CLibInit;
@@ -137,12 +136,12 @@
 		
 		private function onKeyDown( e:KeyboardEvent ):void
 		{
-			//trace("onKeyDown: ", e.keyCode);
-			_swc.swcKey(e.keyCode, 1);
+			//trace("onKeyDown: ", e.keyCode, ", ", e.charCode, ", ", String.fromCharCode(e.charCode));
+			_swc.swcKey(e.keyCode, e.charCode, 1);
 		}
 		private function onKeyUp( e:KeyboardEvent ):void
 		{
-			_swc.swcKey(e.keyCode, 0);
+			_swc.swcKey(e.keyCode, e.charCode, 0);
 		}
 		private function onMouseDown(e:MouseEvent):void 
 		{

@@ -379,12 +379,21 @@ AS3_Val swcWriteSoundData(void *data, AS3_Val args)
 
 AS3_Val swcKey(void *data, AS3_Val args)
 {
-	int key, state;
+	int key, charCode, state;
 
-	AS3_ArrayValue(args, "IntType,IntType", &key, &state);
+	AS3_ArrayValue(args, "IntType,IntType,IntType", &key, &charCode, &state);
 
 	extern byte _asToQKey[256];
-	Key_Event(_asToQKey[key], state);
+	if(_asToQKey[key])
+	{
+		//Modifier, Fkey, or special keys for example, so we need to look up its Quake code
+		Key_Event(_asToQKey[key], state);
+	}
+	else
+	{
+		//For most keys, the Quake code is the same as the char code
+		Key_Event(charCode, state);
+	}
 
 	return NULL;
 }

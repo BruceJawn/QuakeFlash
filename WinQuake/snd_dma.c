@@ -887,7 +887,11 @@ void S_Update_(void)
 	//OutputDebugString(va("paintedtime: %i, soundtime: %i\n", paintedtime, soundtime));
 
 // mix ahead of current position
-	endtime = soundtime + _snd_mixahead.value * shm->speed;
+	endtime = soundtime + _snd_mixahead.value
+#ifdef FLASH
+		/ 2.0f //For Flash we need to halve the mixahead amount, probably because we doubled the sampling rate.
+#endif
+		* shm->speed;
 	samps = shm->samples >> (shm->channels-1);
 	if (endtime - soundtime > samps)
 		endtime = soundtime + samps;

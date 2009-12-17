@@ -337,11 +337,12 @@ void S_PaintChannels(int endtime)
 			int i;
 			for(i = 0; i < numSamples; i++)
 			{
-#define PAINT_BUFFER_SCALE 32768.0f
-				f = (float)paintbuffer[i].left / PAINT_BUFFER_SCALE;
+				float paintMultiple = volume.value / 32768.0f;
+
+				f = (float)paintbuffer[i].left * paintMultiple;
 				f = BigFloat(f);
 				flashData[2*i + 0] = f;
-				f = (float)paintbuffer[i].right / PAINT_BUFFER_SCALE;
+				f = (float)paintbuffer[i].right * paintMultiple;
 				f = BigFloat(f);
 				flashData[2*i + 1] = f;
 			}
